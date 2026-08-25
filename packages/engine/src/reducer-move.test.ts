@@ -4,9 +4,9 @@ import { gameAt } from './test-helpers.js'
 
 describe('applyRoll, plain movement', () => {
   it('advances by the sum of the dice', () => {
-    const { state, steps } = applyRoll(gameAt([2, 0]), [4, 3])
-    expect(state.positions[0]).toBe(9)
-    expect(steps[0]).toEqual({ kind: 'move', from: 2, to: 9, by: 7 })
+    const { state, steps } = applyRoll(gameAt([1, 0]), [4, 3])
+    expect(state.positions[0]).toBe(8)
+    expect(steps[0]).toEqual({ kind: 'move', from: 1, to: 8, by: 7 })
   })
 
   it('records the arrival on an ordinary square as a single step', () => {

@@ -29,3 +29,13 @@ export type GameState = {
 }
 
 export type Move = 'roll'
+
+export type Step =
+  | { kind: 'move'; from: Square; to: Square; by: number }
+  | { kind: 'goose'; from: Square; to: Square; by: number }
+  | { kind: 'bridge' | 'dice' | 'maze' | 'death'; from: Square; to: Square }
+  | { kind: 'bounce'; from: Square; to: Square; overshoot: number }
+  | { kind: 'blocked'; seat: Seat; at: Square; reason: BlockReason }
+  | { kind: 'rescue'; seat: Seat; at: Square; to: Square }
+  | { kind: 'skip'; seat: Seat; turns: number }
+  | { kind: 'win'; seat: Seat; at: number }

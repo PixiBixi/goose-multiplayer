@@ -1,4 +1,5 @@
 export * from './board.js'
 export * from './init.js'
+export * from './reducer.js'
 export * from './rng.js'
 export * from './types.js'

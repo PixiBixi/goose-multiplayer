@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest'
+import { applyRoll } from './reducer.js'
+import { gameAt } from './test-helpers.js'
+
+describe('applyRoll, plain movement', () => {
+  it('advances by the sum of the dice', () => {
+    const { state, steps } = applyRoll(gameAt([2, 0]), [4, 3])
+    expect(state.positions[0]).toBe(9)
+    expect(steps[0]).toEqual({ kind: 'move', from: 2, to: 9, by: 7 })
+  })
+
+  it('records the arrival on an ordinary square as a single step', () => {
+    const { steps } = applyRoll(gameAt([1, 0]), [1, 1])
+    expect(steps).toEqual([{ kind: 'move', from: 1, to: 3, by: 2 }])
+  })
+
+  it('wins on sixty-three', () => {
+    const { state, steps } = applyRoll(gameAt([60, 0]), [2, 1])
+    expect(state.positions[0]).toBe(63)
+    expect(state.winner).toBe(0)
+    expect(state.finished).toBe(true)
+    expect(steps.at(-1)).toEqual({ kind: 'win', seat: 0, at: 63 })
+  })
+
+  it('bounces back by the overshoot when exact finish is on', () => {
+    const { state, steps } = applyRoll(gameAt([62, 0]), [3, 1])
+    expect(state.positions[0]).toBe(60)
+    expect(steps).toContainEqual({ kind: 'bounce', from: 66, to: 60, overshoot: 3 })
+    expect(state.winner).toBeNull()
+  })
+
+  it('wins on an overshoot when exact finish is off', () => {
+    const { state } = applyRoll(gameAt([62, 0], { exactFinish: false }), [3, 1])
+    expect(state.positions[0]).toBe(63)
+    expect(state.winner).toBe(0)
+  })
+
+  it('passes the turn to the next seat', () => {
+    const { state } = applyRoll(gameAt([1, 1, 1]), [1, 1])
+    expect(state.turn).toBe(1)
+  })
+
+  it('refuses to roll on a finished game', () => {
+    const finished = { ...gameAt([63, 0]), finished: true, winner: 0 }
+    expect(() => applyRoll(finished, [1, 1])).toThrow(/finished/i)
+  })
+})

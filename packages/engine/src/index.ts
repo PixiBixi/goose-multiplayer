@@ -1,1 +1,2 @@
-export const BOARD_SIZE = 63
+export * from './board.js'
+export * from './types.js'

@@ -1,0 +1,99 @@
+{
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Écrans"
+    },
+    {
+      "id": "page-2",
+      "name": "Directions écartées"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "page": "page-1",
+      "title": "Table · desktop"
+    },
+    {
+      "file": "TableMobile.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "Table · mobile"
+    },
+    {
+      "file": "Lobby.dc.html",
+      "x": 0,
+      "y": 1060,
+      "w": 1240,
+      "h": 900,
+      "page": "page-1",
+      "title": "Salon"
+    },
+    {
+      "file": "Squares.dc.html",
+      "x": 1380,
+      "y": 1060,
+      "w": 1180,
+      "h": 960,
+      "page": "page-1",
+      "title": "Cases spéciales"
+    },
+    {
+      "file": "Grimoire.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 820,
+      "page": "page-2",
+      "title": "A · Cabinet d’estampes"
+    },
+    {
+      "file": "Neon.dc.html",
+      "x": 1000,
+      "y": 0,
+      "w": 900,
+      "h": 820,
+      "page": "page-2",
+      "title": "B · Circuit nocturne"
+    },
+    {
+      "file": "Bauhaus.dc.html",
+      "x": 2000,
+      "y": 0,
+      "w": 900,
+      "h": 820,
+      "page": "page-2",
+      "title": "D · Géométrie stricte"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-main",
+      "x": 0,
+      "y": -230,
+      "w": 560,
+      "page": "page-1",
+      "text": "Direction C · Risographie, retenue.\nLa spirale tient sur desktop ; sous ~700 px elle bascule sur le serpentin 7 colonnes. Mêmes 63 positions, mêmes couleurs, un composant de rendu différent."
+    },
+    {
+      "id": "note-rejected",
+      "x": 0,
+      "y": -190,
+      "w": 560,
+      "page": "page-2",
+      "text": "Les trois directions non retenues, gardées pour mémoire. Même moment de partie dans chacune : Jérémy fait 7, atteint l'oie 27 et rejoue."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
+}

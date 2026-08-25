@@ -66,6 +66,13 @@ export type ChatLine = {
 }
 
 export type TableView = {
+  /* The version the SERVER is running, stamped by cog and read from the
+     changelog. The client compares it with the version its own bundle was
+     built as: they differ exactly when the tab has been left open across a
+     deploy, which is the moment the client starts receiving things it has
+     never heard of. Do NOT make it optional to save a byte: absent and equal
+     are not the same answer. */
+  version: string
   code: string
   phase: 'lobby' | 'playing' | 'over'
   config: TableConfig

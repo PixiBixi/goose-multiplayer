@@ -24,8 +24,6 @@ export type GameState = {
   positions: Square[]
   blocked: (BlockReason | null)[]
   skipTurns: number[]
-  /** Only the first roll can trigger the opening-nine rule. */
-  hasRolled: boolean[]
   /* Doubles the seat on turn has rolled back to back. Lives in the state
      rather than in the caller so the cap survives a reconnect, and is reset
      the moment the turn passes. */

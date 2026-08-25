@@ -127,18 +127,18 @@ describe('the third consecutive double', () => {
     })
   })
 
-  it('leaves hasRolled alone, so square 0 does not re-arm the opening nine', () => {
+  it('hands the restarted seat no shortcut back: the opening nine still covers 0', () => {
     const start = afterDoubles(2, { tripleDouble: 'restart', opening9: true })
     const { state } = applyRoll(start, [1, 1])
     expect(state.positions[0]).toBe(0)
-    expect(state.hasRolled[0]).toBe(true)
 
-    /* And the consequence, stated rather than hidden: a nine from square 0 is
-       a goose chain to 63. A seat sent home by the third double can win on
-       the very next roll. That is the owner's call, not an accident. */
+    /* A nine from square 0 is a goose chain to 63, whoever throws it and
+       whenever. The opening nine keys on the square for exactly this reason:
+       being sent home must not hand a seat the instant win the default was
+       turned on to kill. */
     const back = applyRoll({ ...state, turn: 0 }, [6, 3]).state
-    expect(back.positions[0]).not.toBe(26)
-    expect(back.positions[0]).toBe(63)
+    expect(back.positions[0]).toBe(26)
+    expect(back.winner).toBeNull()
   })
 
   it('never fires on a fresh table, only after two doubles in a row', () => {

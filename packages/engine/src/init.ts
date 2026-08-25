@@ -32,7 +32,6 @@ export function createGame(seatCount: number, config: Partial<TableConfig> = {})
     positions: zeroes(),
     blocked: Array.from({ length: seatCount }, () => null),
     skipTurns: zeroes(),
-    hasRolled: Array.from({ length: seatCount }, () => false),
     consecutiveDoubles: 0,
     turn: 0 satisfies Seat,
     winner: null,

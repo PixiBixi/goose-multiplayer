@@ -9,5 +9,5 @@ export function gameAt(positions: Square[], config: Partial<TableConfig> = {}): 
      of those into a test of something else. reducer-double.test.ts turns it
      back on, and the invariants property drives it both ways. */
   const state = createGame(positions.length, { doubleAgain: false, ...config })
-  return { ...state, positions: [...positions], hasRolled: positions.map(() => true) }
+  return { ...state, positions: [...positions] }
 }

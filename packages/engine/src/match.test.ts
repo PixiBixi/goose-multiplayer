@@ -29,7 +29,6 @@ describe('match', () => {
     expect(fresh.positions).toEqual([0, 0])
     expect(fresh.blocked).toEqual([null, null])
     expect(fresh.skipTurns).toEqual([0, 0])
-    expect(fresh.hasRolled).toEqual([false, false])
     expect(fresh.consecutiveDoubles).toBe(0)
     expect(fresh.finished).toBe(false)
     expect(fresh.winner).toBeNull()

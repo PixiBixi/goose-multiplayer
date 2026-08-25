@@ -68,19 +68,21 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
     positions: [...state.positions],
     blocked: [...state.blocked],
     skipTurns: [...state.skipTurns],
-    hasRolled: [...state.hasRolled],
   }
-  next.hasRolled[seat] = true
 
   const origin = next.positions[seat] ?? 0
 
-  /* The opening nine. A nine on the very first roll would otherwise chain the
-     geese straight to 63 and win the game before anyone else has played, so
-     the historic rule parks it on 26 or 53 instead. The opening square resolves
-     nothing of its own: this is a placement, not an advance. */
-  const wasFirstRoll = state.hasRolled[seat] === false
+  /* The opening nine. A nine thrown from the start square chains the geese
+     9, 18, 27, 36, 45, 54, 63 and wins outright, so the historic rule parks it
+     on 26 or 53 instead. The opening square resolves nothing of its own: this
+     is a placement, not an advance.
+
+     Keyed on the square, not on whether the seat has rolled before. The rule
+     exists because of the geometry: a nine from 0 reaches 63. Any seat
+     standing on 0 has that shot, including one the third-double rule sent
+     back there mid-game. Do NOT make this a first-roll test again. */
   const opening =
-    wasFirstRoll && next.config.opening9 && next.config.twoDice && by === 9
+    origin === 0 && next.config.opening9 && next.config.twoDice && by === 9
       ? dice.includes(6)
         ? 26
         : 53
@@ -192,9 +194,9 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
 
     /* The third in a row. What it costs is the host's choice, and 'restart'
        is deliberately harsher than La Mort on 58: back to the start, off the
-       board. `hasRolled` is left alone, or standing on square 0 again would
-       re-arm the opening nine, which is about a seat's first roll of the
-       game and nothing else. */
+       board. Which puts the seat back within reach of a nine to 63, and the
+       opening nine covers it: that rule keys on the square, not on the turn
+       counter, precisely so this path cannot reopen the instant win. */
     const outcome = next.config.tripleDouble
     const landing = outcome === 'restart' ? 0 : square
     next.positions[seat] = landing

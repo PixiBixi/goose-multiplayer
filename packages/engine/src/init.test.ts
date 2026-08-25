@@ -7,7 +7,6 @@ describe('createGame', () => {
     expect(s.positions).toEqual([0, 0, 0, 0])
     expect(s.blocked).toEqual([null, null, null, null])
     expect(s.skipTurns).toEqual([0, 0, 0, 0])
-    expect(s.hasRolled).toEqual([false, false, false, false])
     expect(s.consecutiveDoubles).toBe(0)
     expect(s.turn).toBe(0)
     expect(s.winner).toBeNull()

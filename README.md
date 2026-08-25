@@ -213,6 +213,23 @@ de repli au lieu de tomber en fin de fonction. Une étape que le client ne sait
 pas nommer est une étape dont il ne dit rien : elle est sautée par le journal du
 tour, par la file de cartes et par l'animation, et la partie continue.
 
+Le client sait aussi le dire. Le serveur estampille dans chaque vue la version
+qu'il fait tourner, lue dans `CHANGELOG.md`, c'est-à-dire dans ce que `cog bump`
+écrit et le seul endroit du dépôt qui porte un numéro de version.
+`apps/web/vite.config.ts` lit le même fichier au build et fige la valeur dans le
+bundle. Quand les deux diffèrent, l'onglet affiche un bandeau discret et
+refermable : nouvelle version en ligne, recharge quand la partie te le permet.
+Il ne recharge jamais tout seul, une page qui se recharge sous un joueur en
+plein tour lui coûte son tour.
+
+Aucun en-tête de cache ne protège un onglet qu'on ne recharge simplement jamais,
+mais les en-têtes comptent quand même pour le reste :
+`apps/server/src/http.ts` sert `/assets` en `max-age=1an, immutable`, parce que
+vite hache le contenu dans le nom du fichier et qu'un fichier qui ne peut pas
+changer sous son nom n'a rien à revalider. `index.html` garde `max-age=0` et son
+ETag : c'est lui qui pointe vers les hachages courants, et le mettre en cache est
+la façon la plus sûre de rendre un déploiement invisible pendant une semaine.
+
 ## Licence
 
 ISC.

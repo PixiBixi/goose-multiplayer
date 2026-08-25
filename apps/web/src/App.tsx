@@ -6,6 +6,7 @@ import { t } from './i18n/index.js'
 import { codeFromSearch, rememberRoom } from './lib/room-url.js'
 import { Home } from './screens/Home.js'
 import { Lobby } from './screens/Lobby.js'
+import { Table } from './screens/Table.js'
 
 export function App(): JSX.Element {
   const { view, status, error, send, create, join, dismiss, forget } = useGameSocket()
@@ -56,7 +57,21 @@ export function App(): JSX.Element {
             }}
             onLeave={leave}
           />
-        ) : null}
+        ) : (
+          <Table
+            view={view}
+            onRoll={() => {
+              send('roll', {})
+            }}
+            onChat={(text) => {
+              send('chat', { text })
+            }}
+            onRestart={() => {
+              send('restart', {})
+            }}
+            onLeave={leave}
+          />
+        )}
       </main>
     </div>
   )

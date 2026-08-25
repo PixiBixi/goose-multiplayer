@@ -18,7 +18,10 @@ export function createApp(): Express {
 
   if (existsSync(WEB_DIST)) {
     app.use(express.static(WEB_DIST))
-    app.get('*', (req, res, next) => {
+    /* Express 5 runs path-to-regexp 8, which rejects a bare '*': a wildcard
+       has to be named. This line only executes once apps/web/dist exists, so
+       the throw hid until the client was built. Do NOT shorten it back. */
+    app.get('/*splat', (req, res, next) => {
       if (req.path.startsWith('/api')) {
         next()
         return

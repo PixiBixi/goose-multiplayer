@@ -197,6 +197,22 @@ node design/export-png.mjs # les rend en PNG dans design/png/
 | `apps/server`       | Express et Socket.IO, les salles, les tours et la présence                    |
 | `apps/web`          | Le client React : spirale au-dessus de 700 px de conteneur, grille en dessous |
 
+### Le fil est une frontière de version
+
+Un onglet ouvert avant un déploiement continue de tourner avec le bundle qu'il a
+téléchargé, pendant que le serveur en face, lui, a avancé. Il reçoit donc des
+genres d'étape, des raisons de blocage et des issues que ses propres types ne
+connaissent pas. L'exhaustivité que TypeScript prouve est une garantie sur le
+code livré, jamais sur les messages qui arrivent.
+
+Chaque `switch` du client sur une valeur venue du serveur se termine donc par un
+`default` qui passe par `apps/web/src/lib/wire.ts` : la valeur y est passée en
+`never`, ce qui casse toujours la compilation quand une règle est ajoutée au
+moteur et oubliée ici, et à l'exécution une valeur inconnue renvoie une valeur
+de repli au lieu de tomber en fin de fonction. Une étape que le client ne sait
+pas nommer est une étape dont il ne dit rien : elle est sautée par le journal du
+tour, par la file de cartes et par l'animation, et la partie continue.
+
 ## Licence
 
 ISC.

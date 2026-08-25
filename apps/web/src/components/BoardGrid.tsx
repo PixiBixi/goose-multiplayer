@@ -107,11 +107,18 @@ export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
           const x = square === 0 ? width / 2 + spread * 2 : base.x + spread
           const y = square === 0 ? height + START_STRIP / 2 : base.y + half * 0.5
           return (
-            <g key={`${square}-${seat.seat}`} data-pawn={seat.seat}>
+            /* Keyed by seat, not by square: React then moves the same node
+               from one square to the next and the CSS transition has
+               something to animate. Keyed by square it is destroyed and
+               rebuilt, and the pawn teleports. */
+            <g
+              key={seat.seat}
+              className="pawn"
+              data-pawn={seat.seat}
+              transform={`translate(${x.toFixed(1)}, ${y.toFixed(1)})`}
+            >
               <title>{`${seat.name}: ${square === 0 ? t('seat.atStart') : t('seat.atSquare', { square })}`}</title>
               <circle
-                cx={x}
-                cy={y}
                 r={half * 0.48}
                 fill={seat.colour}
                 stroke="var(--ink)"
@@ -119,8 +126,7 @@ export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
                 opacity={seat.presence === 'active' ? 1 : 0.55}
               />
               <text
-                x={x}
-                y={y + half * 0.18}
+                y={half * 0.18}
                 textAnchor="middle"
                 fontFamily="var(--display)"
                 fontSize={half * 0.48}

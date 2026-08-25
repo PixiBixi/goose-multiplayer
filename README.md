@@ -32,6 +32,17 @@ npm run format:check
 Le client ne connaît aucune règle. Le serveur envoie `legalMoves` dans chaque
 vue ; le client affiche ce qu'il reçoit et émet des intentions.
 
+Un double aux deux dés redonne la main au même siège, trois fois de suite au
+maximum. L'hôte choisit ce que coûte le troisième : le tour passe, ou le siège
+repart de la case 0. Règle maison activée par défaut, inerte et grisée avec un
+seul dé.
+
+Le lancer se joue plutôt qu'il ne s'affiche : les dés partent d'une face vide,
+roulent 900 ms puis se posent sur le résultat, et le pion marche la chaîne
+étape par étape, 450 ms chacune, le fil de la partie au même rythme. Le serveur
+connaît le résultat avant l'animation ; le client le retient jusqu'à ce que les
+dés se posent. `prefers-reduced-motion: reduce` affiche tout d'un coup.
+
 ## Docker
 
 L'image sert l'API, les WebSockets et le bundle du client sur un seul port.

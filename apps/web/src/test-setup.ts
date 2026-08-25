@@ -72,6 +72,32 @@ export function resizeTo(width: number): void {
 
 globalThis.ResizeObserver = StubResizeObserver
 
+/* jsdom ships no matchMedia, and the client asks it exactly one question:
+   prefers-reduced-motion. A test that is about what the table says rather
+   than how it moves answers yes and gets the whole chain at once. */
+let reduced = false
+
+export function setReducedMotion(value: boolean): void {
+  reduced = value
+}
+
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string): MediaQueryList =>
+      ({
+        media: query,
+        matches: query.includes('prefers-reduced-motion: reduce') ? reduced : false,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
+  })
+}
+
 /* Node 26 exposes a global `localStorage` that needs --localstorage-file, and
    it shadows the one jsdom would otherwise install. The session token has to
    be persisted for its test to mean anything, so put a real Storage back. */
@@ -98,6 +124,7 @@ if (typeof window !== 'undefined' && !window.localStorage) {
 
 afterEach(() => {
   cleanup()
+  reduced = false
   vi.useRealTimers()
   Element.prototype.getBoundingClientRect = realRect
   observers.clear()

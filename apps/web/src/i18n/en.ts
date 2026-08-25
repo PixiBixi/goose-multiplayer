@@ -41,6 +41,18 @@ export const en = {
   'rule.rescueHelp': 'Landing on the well or the prison frees whoever was there.',
   'rule.opening9': 'Opening nine',
   'rule.opening9Help': 'A 9 on the first roll lands on 26 or 53. Needs two dice.',
+  'rule.doubleAgain': 'A double rolls again',
+  'rule.doubleAgainHelp':
+    'A double hands the turn back, three times in a row at most. Needs two dice.',
+  'rule.tripleDouble': 'On the third double',
+  'rule.tripleDoubleHelp': 'A house rule: three doubles in a row, and the table takes over.',
+  'rule.tripleDoublePass': 'The turn passes',
+  'rule.tripleDoublePassHelp': 'The seat keeps everything it gained and hands over.',
+  'rule.tripleDoubleRestart': 'Back to the start',
+  'rule.tripleDoubleRestartHelp': 'The seat starts again from square 0, off the board.',
+
+  'die.idle': 'Die, not rolled yet',
+  'die.rolling': 'The dice are rolling',
 
   'table.roll': 'Roll the dice',
   'table.yourTurn': 'Your turn',
@@ -89,6 +101,9 @@ export const en = {
   'step.blockedPrison': '{name} walks into the Prison and waits for a rescuer.',
   'step.rescue': '{name} is freed from square {at} and starts again from square {to}.',
   'step.skip': '{name} lingers at the Inn and skips a turn.',
+  'step.double': 'Double {face}: {name} rolls again.',
+  'step.triplePass': '{name} rolls a third double, the turn passes.',
+  'step.tripleRestart': '{name} rolls a third double and starts over.',
   'step.win': '{name} reaches the Garden and wins the game.',
 
   'square.plain': 'Square {n}',

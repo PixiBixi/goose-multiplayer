@@ -28,7 +28,7 @@ describe('Lobby', () => {
 
   it('shows a guest the rules without letting them change any', () => {
     setup(makeView({ you: { seat: 1, name: 'Claire' }, host: 0 }))
-    for (const box of screen.getAllByRole('checkbox')) {
+    for (const box of [...screen.getAllByRole('checkbox'), ...screen.getAllByRole('radio')]) {
       expect(box).toBeDisabled()
     }
     expect(screen.queryByRole('button', { name: 'Commencer la partie' })).toBeNull()
@@ -38,6 +38,28 @@ describe('Lobby', () => {
     setup(makeView({ config: { ...makeView().config, twoDice: false } }))
     expect(screen.getByRole('checkbox', { name: /Neuf d'ouverture/ })).toBeDisabled()
     expect(screen.getByRole('checkbox', { name: /Arrivée exacte/ })).toBeEnabled()
+  })
+
+  it('greys the doubles rule out for the same reason: no double on one die', () => {
+    setup(makeView({ config: { ...makeView().config, twoDice: false } }))
+    expect(screen.getByRole('checkbox', { name: /Double rejoue/ })).toBeDisabled()
+    expect(screen.getByRole('radio', { name: /Le tour passe/ })).toBeDisabled()
+  })
+
+  it('greys the third double out when a double grants nothing anyway', () => {
+    setup(makeView({ config: { ...makeView().config, doubleAgain: false } }))
+    expect(screen.getByRole('checkbox', { name: /Double rejoue/ })).toBeEnabled()
+    expect(screen.getByRole('radio', { name: /Retour au départ/ })).toBeDisabled()
+  })
+
+  it('lets the host pick what a third double costs', async () => {
+    const { onConfigure, user } = setup()
+    const pass = screen.getByRole('radio', { name: /Le tour passe/ })
+    const restart = screen.getByRole('radio', { name: /Retour au départ/ })
+    // 'pass' is the default the server ships, and neither option is an off.
+    expect(pass).toBeChecked()
+    await user.click(restart)
+    expect(onConfigure).toHaveBeenCalledWith({ tripleDouble: 'restart' })
   })
 
   it('refuses to start a table nobody has joined yet', () => {

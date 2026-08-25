@@ -410,7 +410,12 @@ button.primary:disabled {
   opacity: 0.6;
 }
 
-.switch input[type='checkbox'] {
+.switch input[type='radio'] {
+  border-radius: 50%;
+}
+
+.switch input[type='checkbox'],
+.switch input[type='radio'] {
   appearance: none;
   width: 26px;
   height: 26px;
@@ -421,12 +426,14 @@ button.primary:disabled {
   cursor: inherit;
 }
 
-.switch input[type='checkbox']:checked {
+.switch input[type='checkbox']:checked,
+.switch input[type='radio']:checked {
   background: var(--teal);
   box-shadow: inset 0 0 0 4px var(--paper-raised);
 }
 
-.switch input[type='checkbox']:focus-visible {
+.switch input[type='checkbox']:focus-visible,
+.switch input[type='radio']:focus-visible {
   outline: 3px solid var(--pink);
   outline-offset: 2px;
 }
@@ -445,6 +452,32 @@ button.primary:disabled {
 .switch-help {
   color: var(--dim);
   font-size: var(--step--1);
+}
+
+/* A choice, not a switch: two labelled options in a plain fieldset, printed
+   the same way as the switches above them so the panel reads as one list. */
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.6rem;
+  border: var(--border);
+  background: var(--paper);
+}
+
+.choice[data-disabled='true'] {
+  opacity: 0.6;
+}
+
+.choice legend {
+  padding: 0 0.3rem;
+  font-family: var(--display);
+  font-size: var(--step-0);
+}
+
+.choice > .switch-help {
+  margin: 0 0 0.2rem;
 }
 
 /* ------------------------------------------------------------------ table */
@@ -481,6 +514,59 @@ button.primary:disabled {
 .die {
   display: block;
   flex: none;
+}
+
+/* Nothing has been rolled: a dashed, empty face. Two printed faces under a
+   button that says "lancer les dés" read as a result, and the player believes
+   the turn already happened. */
+.die[data-state='idle'] {
+  opacity: 0.7;
+}
+
+.die[data-state='rolling'] {
+  animation: die-tumble 240ms linear infinite;
+}
+
+/* The settle lands rather than fades: the animation name changes when the
+   state does, which is what makes this run exactly once, on arrival. */
+.die[data-state='result'] {
+  animation: die-land 260ms cubic-bezier(0.2, 1.5, 0.4, 1) 1;
+}
+
+@keyframes die-tumble {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-9px) rotate(-15deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-7px) rotate(13deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes die-land {
+  0% {
+    transform: scale(1.24) rotate(-7deg);
+  }
+  55% {
+    transform: scale(0.94) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* One step of the chain is 450ms; the glide is shorter, so the pawn arrives
+   and is read before the next step starts. */
+.pawn {
+  transition: transform 300ms cubic-bezier(0.33, 0.85, 0.3, 1);
 }
 
 .code-line {

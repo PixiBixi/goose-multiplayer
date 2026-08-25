@@ -162,11 +162,18 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
               : base.x + Math.cos(angle) * offset
           const y = square === 0 ? START_Y : base.y + Math.sin(angle) * offset
           return (
-            <g key={`${square}-${seat.seat}`} data-pawn={seat.seat}>
+            /* Keyed by seat, not by square: React then moves the same node
+               from one square to the next and the CSS transition has
+               something to animate. Keyed by square it is destroyed and
+               rebuilt, and the pawn teleports. */
+            <g
+              key={seat.seat}
+              className="pawn"
+              data-pawn={seat.seat}
+              transform={`translate(${x.toFixed(1)}, ${y.toFixed(1)})`}
+            >
               <title>{`${seat.name}: ${square === 0 ? t('seat.atStart') : t('seat.atSquare', { square })}`}</title>
               <circle
-                cx={x}
-                cy={y}
                 r={CELL_RADIUS * 0.56}
                 fill={seat.colour}
                 stroke="var(--ink)"
@@ -174,8 +181,7 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
                 opacity={seat.presence === 'active' ? 1 : 0.55}
               />
               <text
-                x={x}
-                y={y + CELL_RADIUS * 0.2}
+                y={CELL_RADIUS * 0.2}
                 textAnchor="middle"
                 fontFamily="var(--display)"
                 fontSize={CELL_RADIUS * 0.54}

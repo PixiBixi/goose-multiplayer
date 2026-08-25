@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeStep, landingOf } from './describe-step.js'
+import { describeStep, landingOf, originOf } from './describe-step.js'
 
 const names = ['Jérémy', 'Claire']
 
@@ -27,6 +27,26 @@ describe('describeStep', () => {
     )
   })
 
+  it('says why the same seat is rolling again', () => {
+    expect(describeStep({ kind: 'double', seat: 0, dice: [4, 4] }, names)).toMatch(
+      /Double 4 : Jérémy rejoue/,
+    )
+  })
+
+  it('reads the third double off the step, because it knows no rule', () => {
+    const pass = describeStep(
+      { kind: 'tripleDouble', seat: 1, outcome: 'pass', from: 20, to: 20 },
+      names,
+    )
+    const restart = describeStep(
+      { kind: 'tripleDouble', seat: 1, outcome: 'restart', from: 20, to: 0 },
+      names,
+    )
+    expect(pass).toMatch(/le tour passe/i)
+    expect(restart).toMatch(/repart du départ/i)
+    expect(pass).toContain('Claire')
+  })
+
   it('never emits an em dash', () => {
     const all = [
       describeStep({ kind: 'move', from: 1, to: 2, by: 1 }, names),
@@ -34,6 +54,9 @@ describe('describeStep', () => {
       describeStep({ kind: 'bounce', from: 66, to: 60, overshoot: 3 }, names),
       describeStep({ kind: 'win', seat: 0, at: 63 }, names),
       describeStep({ kind: 'skip', seat: 1, turns: 1 }, names),
+      describeStep({ kind: 'double', seat: 0, dice: [2, 2] }, names),
+      describeStep({ kind: 'tripleDouble', seat: 0, outcome: 'pass', from: 9, to: 9 }, names),
+      describeStep({ kind: 'tripleDouble', seat: 0, outcome: 'restart', from: 9, to: 0 }, names),
     ]
     for (const line of all) expect(line).not.toContain('—')
   })
@@ -54,5 +77,23 @@ describe('landingOf', () => {
 
   it('leaves the pawn where it stands when nothing moves it', () => {
     expect(landingOf({ kind: 'skip', seat: 0, turns: 1 })).toBeNull()
+    expect(landingOf({ kind: 'double', seat: 0, dice: [5, 5] })).toBeNull()
+  })
+
+  it('walks the pawn home on a third double that restarts it', () => {
+    expect(landingOf({ kind: 'tripleDouble', seat: 0, outcome: 'restart', from: 40, to: 0 })).toBe(
+      0,
+    )
+    expect(landingOf({ kind: 'tripleDouble', seat: 0, outcome: 'pass', from: 40, to: 40 })).toBe(40)
+  })
+})
+
+describe('originOf', () => {
+  it('reads the square the chain starts from off the server first step', () => {
+    expect(originOf([{ kind: 'move', from: 12, to: 18, by: 6 }])).toBe(12)
+  })
+
+  it('has nothing to say about an empty chain', () => {
+    expect(originOf([])).toBeNull()
   })
 })

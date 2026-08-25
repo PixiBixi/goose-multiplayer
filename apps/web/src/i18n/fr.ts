@@ -41,6 +41,18 @@ export const fr = {
   'rule.rescueHelp': 'Arriver au puits ou en prison libère celui qui y était.',
   'rule.opening9': "Neuf d'ouverture",
   'rule.opening9Help': 'Un 9 au premier lancer place en 26 ou en 53. Demande deux dés.',
+  'rule.doubleAgain': 'Double rejoue',
+  'rule.doubleAgainHelp':
+    'Un double redonne la main, trois fois de suite au maximum. Demande deux dés.',
+  'rule.tripleDouble': 'Au troisième double',
+  'rule.tripleDoubleHelp': "Règle maison : trois doubles d'affilée, et la table reprend la main.",
+  'rule.tripleDoublePass': 'Le tour passe',
+  'rule.tripleDoublePassHelp': "Le siège garde tout ce qu'il a gagné et rend la main.",
+  'rule.tripleDoubleRestart': 'Retour au départ',
+  'rule.tripleDoubleRestartHelp': 'Le siège repart de la case 0, hors du plateau.',
+
+  'die.idle': 'Dé, pas encore lancé',
+  'die.rolling': 'Les dés roulent',
 
   'table.roll': 'Lancer les dés',
   'table.yourTurn': 'À toi de jouer',
@@ -89,6 +101,9 @@ export const fr = {
   'step.blockedPrison': '{name} entre en Prison et attend un sauveteur.',
   'step.rescue': '{name} est libéré de la case {at} et repart en case {to}.',
   'step.skip': "{name} s'attarde à l'Auberge et passe son tour.",
+  'step.double': 'Double {face} : {name} rejoue.',
+  'step.triplePass': '{name} fait un troisième double, le tour passe.',
+  'step.tripleRestart': '{name} fait un troisième double et repart du départ.',
   'step.win': '{name} atteint le Jardin et gagne la partie.',
 
   'square.plain': 'Case {n}',

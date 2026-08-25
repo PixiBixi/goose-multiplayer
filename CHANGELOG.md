@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.2.1](https://github.com/PixiBixi/goose-multiplayer/compare/c1e7d408d1a18720b8a424bf213fd2bba0b1b533..v0.2.1) - 2026-08-25
+#### Bug Fixes
+- (**format**) let cog own the changelog - ([7497efb](https://github.com/PixiBixi/goose-multiplayer/commit/7497efb6757bac05aef2f06aa3e8423f25f3d053)) - Jeremy Delgado
+#### Tests
+- (**e2e**) play full two and six player games through traefik - ([c1e7d40](https://github.com/PixiBixi/goose-multiplayer/commit/c1e7d408d1a18720b8a424bf213fd2bba0b1b533)) - Jeremy Delgado
+
+- - -
+
 ## [v0.2.0](https://github.com/PixiBixi/goose-multiplayer/compare/v0.1.0..v0.2.0) - 2026-08-25
 #### Features
 - (**design**) export the artboards to PNG and show them in the README - ([c368865](https://github.com/PixiBixi/goose-multiplayer/commit/c36886570d6af6e4cba227c10c7f4b37fae597c0)) - Jeremy Delgado

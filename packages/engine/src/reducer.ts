@@ -67,6 +67,24 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
   next.hasRolled[seat] = true
 
   const origin = next.positions[seat] ?? 0
+
+  /* The opening nine. A nine on the very first roll would otherwise chain the
+     geese straight to 63 and win the game before anyone else has played, so
+     the historic rule parks it on 26 or 53 instead. The opening square resolves
+     nothing of its own: this is a placement, not an advance. */
+  const wasFirstRoll = state.hasRolled[seat] === false
+  const opening =
+    wasFirstRoll && next.config.opening9 && next.config.twoDice && by === 9
+      ? dice.includes(6)
+        ? 26
+        : 53
+      : null
+
+  if (opening !== null) {
+    next.positions[seat] = opening
+    next.turn = nextTurnAfter(next, seat)
+    return { state: next, steps: [{ kind: 'move', from: origin, to: opening, by }] }
+  }
   const first = advance(origin, by, next.config.exactFinish)
   const steps: Step[] = [{ kind: 'move', from: origin, to: first.reached, by }]
   if (first.bounce) steps.push(first.bounce)

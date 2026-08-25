@@ -32,6 +32,14 @@ describe('rules', () => {
     expect(state.blocked[1]).toBe('well')
   })
 
+  it('names the seat after the current one', () => {
+    expect(nextSeat(gameAt([1, 1, 1]))).toBe(1)
+  })
+
+  it('hops over a blocked seat', () => {
+    expect(nextSeat({ ...gameAt([1, 31, 1]), blocked: [null, 'well', null] })).toBe(2)
+  })
+
   it('reports no next seat when everyone is stuck', () => {
     const stuck = {
       ...gameAt([31, 52]),

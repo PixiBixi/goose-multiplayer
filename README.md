@@ -37,6 +37,16 @@ maximum. L'hôte choisit ce que coûte le troisième : le tour passe, ou le siè
 repart de la case 0. Règle maison activée par défaut, inerte et grisée avec un
 seul dé.
 
+On sort du puits et de la prison par trois portes, et non plus par une seule :
+un autre joueur prend la place (sauvetage), un double libère et fait avancer du
+même lancer, ou le piège relâche son joueur au bout de trois de ses propres
+tours. Un siège bloqué **prend son tour** et lance : il joue au lieu de
+regarder. La plaque du siège affiche le décompte, « Au puits · encore 2
+essais », parce qu'un pion bloqué sans échéance visible est exactement ce que
+ces règles corrigent. L'hôte règle tout cela dans le salon, jusqu'à la table
+historique où seul un sauvetage ouvre le piège. `scripts/measure-blocking.ts`
+mesure ce que cela change, et le § 3 du design en garde les chiffres.
+
 Le lancer se joue plutôt qu'il ne s'affiche : les dés partent d'une face vide,
 roulent 900 ms puis se posent sur le résultat, et le pion marche la chaîne
 étape par étape, 450 ms chacune, le fil de la partie au même rythme. Le serveur
@@ -45,7 +55,8 @@ dés se posent. `prefers-reduced-motion: reduce` affiche tout d'un coup.
 
 Chaque règle qui se déclenche porte son propre type d'étape dans le moteur :
 le neuf d'ouverture, le pont, les dés, l'auberge, le puits, la prison, le
-labyrinthe, la mort, les oies, le rebond sur 63, le sauvetage, le double, le
+labyrinthe, la mort, les oies, le rebond sur 63, les trois sorties de piège
+(sauvetage, double libérateur, peine purgée) et l'essai manqué, le double, le
 troisième double, le jardin, l'arrivée libre et la table bloquée. Une règle que
 le client devrait deviner en comparant deux cases est une règle que le joueur
 devine aussi, donc le moteur la nomme. `STEP_KINDS`, dans `@goose/protocol`,

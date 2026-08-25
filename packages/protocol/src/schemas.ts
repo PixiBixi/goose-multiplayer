@@ -25,6 +25,12 @@ export const clientSchemas = {
       rescue: z.boolean().optional(),
       opening9: z.boolean().optional(),
       doubleAgain: z.boolean().optional(),
+      /* Nullable rather than optional-as-off: `null` is the historic rescue
+         only table, a real choice a host can make, and `undefined` already
+         means "leave this rule alone". Capped so a host cannot set a wait
+         nobody would sit through. */
+      maxBlockedTurns: z.int().min(1).max(20).nullable().optional(),
+      escapeOnDouble: z.boolean().optional(),
       /* Not a switch: neither value is an "off", so the wire carries the
          choice itself rather than a boolean the client would have to map. */
       tripleDouble: z.enum(['pass', 'restart']).optional(),

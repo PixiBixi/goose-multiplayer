@@ -19,6 +19,9 @@ export const STEP_KINDS = [
   'overshoot',
   'blocked',
   'rescue',
+  'freed',
+  'escape',
+  'escapeFailed',
   'skip',
   'double',
   'tripleDouble',
@@ -40,6 +43,16 @@ export type SeatView = {
   presence: Presence
   position: Square
   blocked: BlockReason | null
+  /* The countdown the seat plate reads out. Turns this seat has left in the
+     trap before the cap lets it go, `null` when the table sets no cap and the
+     only way out is somebody else. Computed by the server: a plate that
+     subtracted a config field from a state field would be the client working
+     out a rule for itself. */
+  blockedTurnsLeft: number | null
+  /* Whether those turns are attempts or waits. A seat that rolls for its
+     freedom is doing something, and the plate says so: "encore 2 essais"
+     rather than "encore 2 tours". */
+  blockedTrying: boolean
   skipTurns: number
   colour: string
   handCount?: number

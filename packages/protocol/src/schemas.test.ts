@@ -58,6 +58,22 @@ describe('client schemas', () => {
     expect(clientSchemas.configureTable.safeParse({ tripleDouble: 'jail' }).success).toBe(false)
   })
 
+  it('carries the two ways out of the well and the prison', () => {
+    expect(clientSchemas.configureTable.safeParse({ escapeOnDouble: false }).success).toBe(true)
+    expect(clientSchemas.configureTable.safeParse({ maxBlockedTurns: 3 }).success).toBe(true)
+    /* null is a real choice, the historic rescue only table, and it has to
+       survive the wire as itself rather than as a missing key. */
+    const historic = clientSchemas.configureTable.safeParse({ maxBlockedTurns: null })
+    expect(historic.success).toBe(true)
+    expect(historic.data?.maxBlockedTurns).toBeNull()
+  })
+
+  it('refuses a cap nobody could play with', () => {
+    expect(clientSchemas.configureTable.safeParse({ maxBlockedTurns: 0 }).success).toBe(false)
+    expect(clientSchemas.configureTable.safeParse({ maxBlockedTurns: 2.5 }).success).toBe(false)
+    expect(clientSchemas.configureTable.safeParse({ maxBlockedTurns: 99 }).success).toBe(false)
+  })
+
   it('rejects a card mode that v1 cannot run', () => {
     expect(clientSchemas.configureTable.safeParse({ mode: 'cards' }).success).toBe(false)
   })

@@ -43,6 +43,28 @@ function publish(socket: Socket, manager: RoomManager, code: string): void {
   socket.emit('tableView', room.view(data.seat))
 }
 
+/* Every seat at the table, each getting its own projection. Needed by the
+   actions that change the room without going through RoomManager: those never
+   reach the manager's onView, so answering only the socket that acted left
+   the others staring at a table where nobody ever chatted, no rule ever
+   changed and no rematch ever started. */
+function publishRoom(io: Server, manager: RoomManager, code: string): void {
+  const room = manager.get(code)
+  if (!room) return
+  io.in(code)
+    .fetchSockets()
+    .then((sockets) => {
+      for (const other of sockets) {
+        const seat = (other.data as Partial<SessionData>).seat
+        if (seat !== undefined) other.emit('tableView', room.view(seat))
+      }
+    })
+    .catch(() => {
+      /* A failed fan-out is not worth killing the connection over: the next
+         action republishes, and the actor already has its own view. */
+    })
+}
+
 /* One socket.on per key of clientSchemas, so the wire and the handlers can
    never drift apart: see handlers.test.ts, which checks that every key has a
    listener. Every handler validates its payload before touching the room,
@@ -123,7 +145,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
           Object.entries(parsed.data).filter(([, value]) => value !== undefined),
         ) as Partial<TableConfig>
         manager.get(session.code)?.configure(session.seat, patch)
-        publish(socket, manager, session.code)
+        publishRoom(io, manager, session.code)
       })
     })
 
@@ -168,7 +190,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       if (!session) return
       run('chat', () => {
         manager.get(session.code)?.chat(session.seat, parsed.data.text)
-        publish(socket, manager, session.code)
+        publishRoom(io, manager, session.code)
       })
     })
 
@@ -183,7 +205,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       if (!session) return
       run('leave', () => {
         manager.get(session.code)?.leave(session.seat)
-        publish(socket, manager, session.code)
+        publishRoom(io, manager, session.code)
         socket.leave(session.code)
         socket.data = {}
       })
@@ -200,7 +222,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       if (!session) return
       run('restart', () => {
         manager.get(session.code)?.restart(session.seat)
-        publish(socket, manager, session.code)
+        publishRoom(io, manager, session.code)
       })
     })
 

@@ -140,4 +140,28 @@ describe('handlers', () => {
       expect.objectContaining({ code: 'bad_payload' }),
     )
   })
+
+  it('answers every seat at the table when one of them chats', async () => {
+    const { connect } = table()
+
+    const host = fakeSocket('a')
+    connect(host)
+    fire(host, 'createRoom', { name: 'Jérémy', session: 'token-host' })
+    const code = lastView(host).code
+
+    const guest = fakeSocket('b')
+    connect(guest)
+    fire(guest, 'joinRoom', { code, name: 'Claire', session: 'token-guest' })
+
+    fire(guest, 'chat', { text: 'bien joué' })
+    // The fan-out awaits fetchSockets, so let the microtask queue drain.
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // chat, configureTable, leaveRoom and restart never reach the manager, so
+    // they never trigger its onView: answering only the socket that acted left
+    // everyone else on a table where nobody ever said anything.
+    expect(lastView(host).chat.map((line) => line.text)).toEqual(['bien joué'])
+    expect(lastView(guest).chat.map((line) => line.text)).toEqual(['bien joué'])
+  })
 })

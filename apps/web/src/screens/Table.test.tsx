@@ -201,6 +201,32 @@ describe('Table, the roll it plays out', () => {
     expect(container.querySelector('.turn-log')?.textContent).toMatch(/Jérémy a fait 12/)
   })
 
+  it('holds whose turn it is until the chain has played', () => {
+    vi.useFakeTimers()
+    setup(
+      makeView({
+        phase: 'playing',
+        lastTurn: { seat: 0, dice: [4, 3], steps: [{ kind: 'move', from: 0, to: 7, by: 7 }] },
+        turn: { seat: 1, legalMoves: [], deadlineAt: null },
+      }),
+      false,
+    )
+    // The server has already passed the turn to Claire. Saying so while the
+    // dice are still spinning tells the player the roll was not a double,
+    // which is the result arriving early by another route.
+    expect(screen.getByRole('heading', { name: 'À toi de jouer' })).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(TUMBLE_MS)
+    })
+    expect(screen.getByRole('heading', { name: 'À toi de jouer' })).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(STEP_MS)
+    })
+    expect(screen.getByRole('heading', { name: /Claire/ })).toBeInTheDocument()
+  })
+
   it('does not let the seat list give the roll away while the dice spin', () => {
     vi.useFakeTimers()
     const { container } = setup(

@@ -83,7 +83,18 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
     }
   }, [awaitingRoll])
 
-  const playing = awaitingRoll || (view.lastTurn !== null && (!tumble.settled || !playback.done))
+  /* The chain on screen, and the whole sequence. They are not the same thing:
+     the chain is what the dice and the pawn are still saying, the sequence
+     also covers the round trip between the click and the server's answer. */
+  const chainPlaying = view.lastTurn !== null && (!tumble.settled || !playback.done)
+  const playing = awaitingRoll || chainPlaying
+
+  /* Whose turn it is on screen, held on the seat that is still resolving. The
+     next seat's name appearing in the heading while the dice are still
+     spinning says the roll was not a double, which is the result arriving
+     early by another route. Taken off the server's own lastTurn, so no rule is
+     being guessed at here. */
+  const turnSeat = chainPlaying && view.lastTurn !== null ? view.lastTurn.seat : view.turn.seat
 
   /* The view only ever carries the last turn, so the feed is kept here. It
      stores what the server narrated, it never re-derives a chain, and a line
@@ -150,7 +161,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
     )
   }, [view.seats, view.lastTurn, playback.done, playback.played, playback.square])
 
-  const yourTurn = view.turn.seat === view.you.seat
+  const yourTurn = turnSeat === view.you.seat
   /* Disabled for the whole sequence, dice and walk together: a second roll
      fired mid-chain would land a new turn on top of the one still playing. */
   const canRoll = view.turn.legalMoves.includes('roll') && !playing
@@ -188,7 +199,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
           <h2>
             {yourTurn
               ? t('table.yourTurn')
-              : t('table.turnOf', { name: seats[view.turn.seat]?.name ?? '' })}
+              : t('table.turnOf', { name: seats[turnSeat]?.name ?? '' })}
           </h2>
           <div className="row">
             {faces.map((value, index) => (
@@ -227,7 +238,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
                 key={seat.seat}
                 seat={seat}
                 isYou={seat.seat === view.you.seat}
-                isTurn={seat.seat === view.turn.seat && view.phase === 'playing'}
+                isTurn={seat.seat === turnSeat && view.phase === 'playing'}
                 isHost={seat.seat === view.host}
               />
             ))}

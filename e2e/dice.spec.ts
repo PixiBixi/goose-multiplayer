@@ -28,6 +28,10 @@ test('the dice idle, tumble, and only then say what was rolled', async ({ browse
   await expect(host.getByTestId('turn-panel')).toHaveAttribute('data-playing', 'true')
   await expect(host.getByRole('img', { name: 'Les dés roulent' })).toHaveCount(2)
   await expect(roll).toBeDisabled()
+  /* And the turn on screen is still Jérémy's, whatever the server already
+     decided: the next name in the heading would say the roll was not a
+     double before the dice had said anything. */
+  await expect(host.getByRole('heading', { name: 'À toi de jouer' })).toBeVisible()
 
   /* Then it settles on real faces and the log says what happened. The other
      tab plays the same chain off the same steps: the narration is the

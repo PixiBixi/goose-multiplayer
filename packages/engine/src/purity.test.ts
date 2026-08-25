@@ -1,7 +1,3 @@
-/// <reference types="node" />
-/* The root tsconfig does not set `types`, and TypeScript 6 no longer pulls
-   @types/node in on its own. Referenced here rather than in a root config,
-   which this package does not own. */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'

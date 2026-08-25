@@ -19,6 +19,7 @@ export function restart(state: GameState): GameState {
     blocked: Array.from({ length: state.seatCount }, () => null),
     skipTurns: zeroes(),
     hasRolled: Array.from({ length: state.seatCount }, () => false),
+    consecutiveDoubles: 0,
     turn: 0,
     winner: null,
     finished: false,

@@ -6,6 +6,12 @@ import type { GameState, Seat, Square, Step } from './types.js'
    test instead of hanging a table. Do NOT raise it to make a test pass. */
 export const MAX_STEPS = 16
 
+/* Three, then the turn passes whatever the host chose. A double granting a
+   roll that can grant another one is a loop, and rare is not never: the
+   engine has a termination proof precisely so no rule can reopen one. Do NOT
+   raise it. */
+export const MAX_CONSECUTIVE_DOUBLES = 3
+
 type Bounce = Extract<Step, { kind: 'bounce' }>
 
 /* One advance: forward by `by`, rebounding off 63 when exact finish is on.
@@ -82,6 +88,7 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
 
   if (opening !== null) {
     next.positions[seat] = opening
+    next.consecutiveDoubles = 0
     next.turn = nextTurnAfter(next, seat)
     return { state: next, steps: [{ kind: 'move', from: origin, to: opening, by }] }
   }
@@ -158,10 +165,43 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
   if (square === BOARD_SIZE) {
     next.winner = seat
     next.finished = true
+    next.consecutiveDoubles = 0
     steps.push({ kind: 'win', seat, at: BOARD_SIZE })
     return { state: next, steps }
   }
 
+  /* The doubles house rule. A seat that ends its resolution blocked or
+     waiting has nothing to roll again with, and rolling again out of the
+     prison you were just sent to would read as a reward. */
+  const rolledDouble =
+    next.config.doubleAgain &&
+    next.config.twoDice &&
+    dice.length === 2 &&
+    dice[0] === dice[1] &&
+    next.blocked[seat] === null &&
+    (next.skipTurns[seat] ?? 0) === 0
+
+  if (rolledDouble) {
+    const streak = next.consecutiveDoubles + 1
+    if (streak < MAX_CONSECUTIVE_DOUBLES) {
+      next.consecutiveDoubles = streak
+      steps.push({ kind: 'double', seat, dice: [...dice] })
+      /* The turn does not move. Same seat, same view, one more roll. */
+      return { state: next, steps }
+    }
+
+    /* The third in a row. What it costs is the host's choice, and 'restart'
+       is deliberately harsher than La Mort on 58: back to the start, off the
+       board. `hasRolled` is left alone, or standing on square 0 again would
+       re-arm the opening nine, which is about a seat's first roll of the
+       game and nothing else. */
+    const outcome = next.config.tripleDouble
+    const landing = outcome === 'restart' ? 0 : square
+    next.positions[seat] = landing
+    steps.push({ kind: 'tripleDouble', seat, outcome, from: square, to: landing })
+  }
+
+  next.consecutiveDoubles = 0
   next.turn = nextTurnAfter(next, seat)
   return { state: next, steps }
 }

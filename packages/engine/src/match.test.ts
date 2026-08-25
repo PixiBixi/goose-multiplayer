@@ -19,12 +19,18 @@ describe('match', () => {
   })
 
   it('resets positions and flags but keeps the seats and the config', () => {
-    const played = { ...gameAt([30, 20], { twoDice: false }), winner: 0, finished: true }
+    const played = {
+      ...gameAt([30, 20], { twoDice: false }),
+      consecutiveDoubles: 2,
+      winner: 0,
+      finished: true,
+    }
     const fresh = restart(played)
     expect(fresh.positions).toEqual([0, 0])
     expect(fresh.blocked).toEqual([null, null])
     expect(fresh.skipTurns).toEqual([0, 0])
     expect(fresh.hasRolled).toEqual([false, false])
+    expect(fresh.consecutiveDoubles).toBe(0)
     expect(fresh.finished).toBe(false)
     expect(fresh.winner).toBeNull()
     expect(fresh.turn).toBe(0)

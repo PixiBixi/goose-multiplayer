@@ -9,13 +9,22 @@ const die = fc.integer({ min: 1, max: 6 })
 describe('engine invariants', () => {
   it('always terminates and stays on the board', () => {
     fc.assert(
-      fc.property(fc.integer({ min: 0, max: 62 }), die, die, fc.boolean(), (from, a, b, exact) => {
-        const { state, steps } = applyRoll(gameAt([from, 0], { exactFinish: exact }), [a, b])
-        expect(steps.length).toBeLessThanOrEqual(MAX_STEPS)
-        const landed = state.positions[0] ?? -1
-        expect(landed).toBeGreaterThanOrEqual(0)
-        expect(landed).toBeLessThanOrEqual(BOARD_SIZE)
-      }),
+      fc.property(
+        fc.integer({ min: 0, max: 62 }),
+        die,
+        die,
+        fc.boolean(),
+        fc.boolean(),
+        fc.constantFrom('pass' as const, 'restart' as const),
+        (from, a, b, exact, doubleAgain, tripleDouble) => {
+          const start = gameAt([from, 0], { exactFinish: exact, doubleAgain, tripleDouble })
+          const { state, steps } = applyRoll(start, [a, b])
+          expect(steps.length).toBeLessThanOrEqual(MAX_STEPS)
+          const landed = state.positions[0] ?? -1
+          expect(landed).toBeGreaterThanOrEqual(0)
+          expect(landed).toBeLessThanOrEqual(BOARD_SIZE)
+        },
+      ),
       { numRuns: 5000 },
     )
   })

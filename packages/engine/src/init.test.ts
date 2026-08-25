@@ -8,6 +8,7 @@ describe('createGame', () => {
     expect(s.blocked).toEqual([null, null, null, null])
     expect(s.skipTurns).toEqual([0, 0, 0, 0])
     expect(s.hasRolled).toEqual([false, false, false, false])
+    expect(s.consecutiveDoubles).toBe(0)
     expect(s.turn).toBe(0)
     expect(s.winner).toBeNull()
     expect(s.finished).toBe(false)
@@ -19,6 +20,8 @@ describe('createGame', () => {
       twoDice: true,
       rescue: true,
       opening9: true,
+      doubleAgain: true,
+      tripleDouble: 'pass',
       mode: 'classic',
     })
   })

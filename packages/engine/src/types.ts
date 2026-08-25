@@ -3,11 +3,18 @@ export type Square = number
 export type Seat = number
 export type BlockReason = 'well' | 'prison'
 
+/** What a third consecutive double costs the seat that rolled it. */
+export type TripleDouble = 'pass' | 'restart'
+
 export type TableConfig = {
   exactFinish: boolean
   twoDice: boolean
   rescue: boolean
   opening9: boolean
+  /* A house rule with no historical basis: the printed game grants its
+     re-rolls through the goose squares, never through the dice. */
+  doubleAgain: boolean
+  tripleDouble: TripleDouble
   mode: 'classic' | 'cards'
 }
 
@@ -19,6 +26,10 @@ export type GameState = {
   skipTurns: number[]
   /** Only the first roll can trigger the opening-nine rule. */
   hasRolled: boolean[]
+  /* Doubles the seat on turn has rolled back to back. Lives in the state
+     rather than in the caller so the cap survives a reconnect, and is reset
+     the moment the turn passes. */
+  consecutiveDoubles: number
   turn: Seat
   winner: Seat | null
   finished: boolean
@@ -38,4 +49,6 @@ export type Step =
   | { kind: 'blocked'; seat: Seat; at: Square; reason: BlockReason }
   | { kind: 'rescue'; seat: Seat; at: Square; to: Square }
   | { kind: 'skip'; seat: Seat; turns: number }
+  | { kind: 'double'; seat: Seat; dice: number[] }
+  | { kind: 'tripleDouble'; seat: Seat; outcome: TripleDouble; from: Square; to: Square }
   | { kind: 'win'; seat: Seat; at: number }

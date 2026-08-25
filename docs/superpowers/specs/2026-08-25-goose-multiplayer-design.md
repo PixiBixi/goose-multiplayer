@@ -121,7 +121,11 @@ Configurables par l'hôte, avant le premier lancer uniquement.
 | `twoDice` | activée | Deux dés à six faces. Désactivée, un seul dé et la partie dure environ deux fois plus longtemps. |
 | `rescue` | activée | Un joueur bloqué au puits ou en prison est libéré quand un autre arrive sur la case et prend sa place. Désactivée, il y reste jusqu'à la fin de la manche. |
 | `opening9` | activée | Un 9 au premier lancer envoie directement en 26 si les dés font 6+3, en 53 si 5+4. Activée par défaut parce que sans elle un 9 d'ouverture enchaîne les oies 9, 18, 27, 36, 45, 54 puis 63 et gagne la partie d'emblée. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
+| `doubleAgain` | activée | Un double aux deux dés redonne la main au même siège au lieu de passer le tour. Aucune relance si le siège finit sa résolution bloqué (puits, prison), en attente (auberge) ou vainqueur. Trois doubles consécutifs au maximum. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
+| `tripleDouble` | `'pass'` | Ce que coûte le **troisième** double consécutif. `'pass'` : le tour passe au siège suivant, les gains des deux lancers précédents restent acquis. `'restart'` : le siège repart du départ, case 0, hors du plateau, puis le tour passe. Plus sévère que La Mort en 58, qui ne renvoie qu'en case 1 : c'est un choix assumé. Dans les deux cas `hasRolled` reste vrai, revenir en case 0 ne réarme pas le neuf d'ouverture. Grisée quand `doubleAgain` ou `twoDice` est décochée. |
 | `mode: 'cards'` | désactivé | La variante à cartes action. Refusée par le serveur en v1 (voir §8). |
+
+La règle des doubles est une règle maison : ni le plateau imprimé ni aucune édition connue ne la contient, les relances du jeu de l'oie viennent des cases oie. Le plafond à trois existe pour qu'un siège chanceux ne puisse pas garder la table indéfiniment, et parce que le moteur a une preuve de terminaison qu'aucune règle ajoutée ne doit rouvrir.
 
 ### Blocages, attente et ordre du tour
 

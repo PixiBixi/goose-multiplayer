@@ -86,8 +86,11 @@ ce que la suite pilote est la définition de service qui part en déploiement,
 WebSocket nulle part : Traefik proxie la montée lui-même, et la suite le prouve
 au lieu de le supposer.
 
-Trois parcours : le salon et les règles, une partie à deux jouée jusqu'au
-jardin, et une table pleine à six avec un septième joueur refusé.
+Quatre parcours : le salon et les règles, le ressenti d'un lancer (dés au
+repos, roulement, arrêt), une partie à deux jouée jusqu'au jardin, et une table
+pleine à six avec un septième joueur refusé. La partie à six tourne en
+`reducedMotion: 'reduce'` : elle est déjà longue, et c'est le parcours à deux
+qui joue l'animation pour de vrai.
 
 Le port d'entrée est le 8088, réglable avec `E2E_PORT`.
 

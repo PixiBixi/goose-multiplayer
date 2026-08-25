@@ -15,6 +15,17 @@ export type TableConfig = {
      re-rolls through the goose squares, never through the dice. */
   doubleAgain: boolean
   tripleDouble: TripleDouble
+  /* How many of its own turns a seat spends in the well or the prison before
+     the trap lets it go, whichever comes first with a rescue or an escaping
+     double. `null` is the historic rule, rescue only, which measured as an
+     elimination in the large majority of games: see the spec and
+     scripts/measure-blocking.ts. Do NOT make `null` the default again. */
+  maxBlockedTurns: number | null
+  /* A blocked seat takes its turn and rolls for its freedom instead of being
+     passed over, and a double opens the trap. Inert without `twoDice`: there
+     is no double on one die, and a seat that cannot possibly succeed is
+     passed over rather than made to roll. */
+  escapeOnDouble: boolean
   mode: 'classic' | 'cards'
 }
 
@@ -23,6 +34,12 @@ export type GameState = {
   seatCount: number
   positions: Square[]
   blocked: (BlockReason | null)[]
+  /* Turns this seat has already spent blocked, counted in its own turns:
+     an escape attempt and a turn spent being passed over cost the same one.
+     In the state and not in a timer, so it survives a reconnect and replays
+     exactly. Reset to zero the moment the seat gets out, by any of the three
+     doors. */
+  blockedTurns: number[]
   skipTurns: number[]
   /* Doubles the seat on turn has rolled back to back. Lives in the state
      rather than in the caller so the cap survives a reconnect, and is reset
@@ -60,6 +77,16 @@ export type Step =
   /* `reason` is the trap the seat is walking out of. The square alone would
      make the client look 31 and 52 up on the board to tell them apart. */
   | { kind: 'rescue'; seat: Seat; at: Square; to: Square; reason: BlockReason }
+  /* Out by waiting: the seat served `waited` of its own turns and the trap
+     let it go. A different door from `rescue`, so a different kind: nobody
+     took its place, and the client must be able to say which one opened. */
+  | { kind: 'freed'; seat: Seat; at: Square; reason: BlockReason; waited: number }
+  /* Out by rolling a double. The dice travel with the step because they are
+     the reason, and the seat moves by them in the same turn. */
+  | { kind: 'escape'; seat: Seat; at: Square; reason: BlockReason; dice: number[] }
+  /* Tried for the double and missed. Without it the turn reads as if the seat
+     had simply been skipped, and the player never sees that it played. */
+  | { kind: 'escapeFailed'; seat: Seat; at: Square; reason: BlockReason; dice: number[] }
   | { kind: 'skip'; seat: Seat; turns: number }
   | { kind: 'double'; seat: Seat; dice: number[] }
   | { kind: 'tripleDouble'; seat: Seat; outcome: TripleDouble; from: Square; to: Square }

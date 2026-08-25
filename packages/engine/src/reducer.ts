@@ -1,4 +1,5 @@
 import { BOARD_SIZE, effectAt } from './board.js'
+import { canAttemptEscape } from './rules.js'
 import type { GameState, Seat, Square, Step } from './types.js'
 
 /* The chain is provably bounded (see the spec), so this cap never fires on a
@@ -42,27 +43,64 @@ function advance(from: Square, by: number, exactFinish: boolean): Advance {
   return { landed: raw, reached: raw, correction: null }
 }
 
+/* One of the seat's own turns spent in the trap, and the release when the
+   count reaches the cap. Both doors that are not the rescue come through
+   here, so a missed escape attempt and a turn spent being passed over cost
+   exactly the same, which is what makes the cap a promise the player can
+   count down on the seat plate. Mutates the reducer's private copy. */
+function spendBlockedTurn(state: GameState, seat: Seat, steps: Step[]): void {
+  const cap = state.config.maxBlockedTurns
+  const reason = state.blocked[seat]
+  if (reason === null || reason === undefined || cap === null) return
+  const waited = (state.blockedTurns[seat] ?? 0) + 1
+  if (waited < cap) {
+    state.blockedTurns[seat] = waited
+    return
+  }
+  state.blocked[seat] = null
+  state.blockedTurns[seat] = 0
+  steps.push({ kind: 'freed', seat, at: state.positions[seat] ?? 0, reason, waited })
+}
+
 /* Waiting is spent by being passed over, blocking is not: an inn costs one
-   turn, a well costs turns until someone frees you. Mutates the state it is
-   handed, which is always the reducer's private copy.
+   turn, a well costs turns until one of the three doors opens. Mutates the
+   state it is handed, which is always the reducer's private copy.
 
    One function owns the whole rule, including the deadlock, because every
    caller that advances the turn has to agree on when the round is over. */
 function nextTurnAfter(state: GameState, seat: Seat, steps: Step[]): Seat {
-  for (let hop = 1; hop <= state.seatCount; hop++) {
-    const candidate = (seat + hop) % state.seatCount
-    if (state.blocked[candidate] !== null) continue
-    if ((state.skipTurns[candidate] ?? 0) > 0) {
-      state.skipTurns[candidate] = (state.skipTurns[candidate] ?? 0) - 1
-      continue
+  const cap = state.config.maxBlockedTurns
+  /* With a finite cap the table can be entirely blocked and still not be
+     stuck: every lap raises each blocked seat's count, so one of them is out
+     within `cap` laps and plays on the lap after that. With `null` there is a
+     single lap and the deadlock below is the honest answer. Never unbounded:
+     the loop is what proves the round ends. */
+  const laps = cap === null ? 1 : Math.max(2, cap + 1)
+
+  for (let lap = 0; lap < laps; lap++) {
+    for (let hop = 1; hop <= state.seatCount; hop++) {
+      const candidate = (seat + hop) % state.seatCount
+      if (state.blocked[candidate] !== null) {
+        /* A seat that can roll for its freedom takes its turn like anybody
+           else. That is the whole point of the escape rule: the player plays
+           instead of watching. The attempt itself is charged against the cap
+           in applyRoll, not here, or it would cost the seat two turns. */
+        if (canAttemptEscape(state)) return candidate
+        spendBlockedTurn(state, candidate, steps)
+        continue
+      }
+      if ((state.skipTurns[candidate] ?? 0) > 0) {
+        state.skipTurns[candidate] = (state.skipTurns[candidate] ?? 0) - 1
+        continue
+      }
+      return candidate
     }
-    return candidate
   }
 
-  /* Nobody can act. With the rescue rule off, seats can be stuck for good, and
-     a table that waits for a seat that will never move is worse than a round
-     that ends. Said out loud: a round that stops with no winner is a rule of
-     the spec, not a table that gave up. */
+  /* Nobody can act, and nothing will change that: no rescue, no cap, no
+     escaping double. A table that waits for a seat that will never move is
+     worse than a round that ends. Said out loud: a round that stops with no
+     winner is a rule of the spec, not a table that gave up. */
   state.finished = true
   state.winner = null
   steps.push({ kind: 'deadlock' })
@@ -78,10 +116,35 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
     ...state,
     positions: [...state.positions],
     blocked: [...state.blocked],
+    blockedTurns: [...state.blockedTurns],
     skipTurns: [...state.skipTurns],
   }
 
   const origin = next.positions[seat] ?? 0
+
+  /* The door the blocked seat opens for itself. It rolls like anybody else,
+     and a double is the key: it comes out AND moves by that same roll, chain
+     and all. A miss costs one of its turns and the turn passes, which is what
+     the cap counts. Reaching here unblocked-only is a caller bug, not a rule:
+     nextTurnAfter never hands the turn to a seat that cannot use it. */
+  const opened: Step[] = []
+  const trapped = next.blocked[seat] ?? null
+  if (trapped !== null) {
+    if (!canAttemptEscape(next)) throw new Error('a blocked seat cannot roll at this table')
+    const double = dice.length === 2 && dice[0] === dice[1]
+    if (!double) {
+      const missed: Step[] = [
+        { kind: 'escapeFailed', seat, at: origin, reason: trapped, dice: [...dice] },
+      ]
+      spendBlockedTurn(next, seat, missed)
+      next.consecutiveDoubles = 0
+      next.turn = nextTurnAfter(next, seat, missed)
+      return { state: next, steps: missed }
+    }
+    next.blocked[seat] = null
+    next.blockedTurns[seat] = 0
+    opened.push({ kind: 'escape', seat, at: origin, reason: trapped, dice: [...dice] })
+  }
 
   /* The opening nine. A nine thrown from the start square chains the geese
      9, 18, 27, 36, 45, 54, 63 and wins outright, so the historic rule parks it
@@ -107,7 +170,7 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
     return { state: next, steps: opened }
   }
   const first = advance(origin, by, next.config.exactFinish)
-  const steps: Step[] = [{ kind: 'move', from: origin, to: first.reached, by }]
+  const steps: Step[] = [...opened, { kind: 'move', from: origin, to: first.reached, by }]
   if (first.correction) steps.push(first.correction)
 
   let square = first.landed
@@ -158,11 +221,15 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
         )
         if (held >= 0) {
           next.blocked[held] = null
+          /* Out is out: the turns it had already served are spent, and a seat
+             that falls back in later starts its count from zero. */
+          next.blockedTurns[held] = 0
           next.positions[held] = origin
           steps.push({ kind: 'rescue', seat: held, at: square, to: origin, reason: effect.reason })
         }
       }
       next.blocked[seat] = effect.reason
+      next.blockedTurns[seat] = 0
       steps.push({ kind: 'blocked', seat, at: square, reason: effect.reason })
       break
     }
@@ -188,8 +255,13 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
 
   /* The doubles house rule. A seat that ends its resolution blocked or
      waiting has nothing to roll again with, and rolling again out of the
-     prison you were just sent to would read as a reward. */
+     prison you were just sent to would read as a reward.
+
+     An escaping double buys the way out of the trap and nothing else: it does
+     NOT also grant the bonus roll, or the well would pay better than an
+     ordinary square. The rule card says so, because it reads like a bug. */
   const rolledDouble =
+    trapped === null &&
     next.config.doubleAgain &&
     next.config.twoDice &&
     dice.length === 2 &&

@@ -2,6 +2,22 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.0](https://github.com/PixiBixi/goose-multiplayer/compare/b26a2bd76b14d63933c04a0a8d760d23aa74bd21..v0.6.0) - 2026-08-25
+#### Features
+- (**protocol**) carry the running server version in every view - ([5b3d326](https://github.com/PixiBixi/goose-multiplayer/commit/5b3d32684171dfd0f23e06c519c51d5ce89c7f94)) - Jeremy Delgado
+- (**server**) stamp the version it is running into every view - ([82f31e8](https://github.com/PixiBixi/goose-multiplayer/commit/82f31e89a86991202e62cb1bc62aecaf9b423af1)) - Jeremy Delgado
+- (**web**) tell a stale tab that the server has moved on - ([73f4aca](https://github.com/PixiBixi/goose-multiplayer/commit/73f4acacfa29e24cc3483d4cf95519ec7876ea22)) - Jeremy Delgado
+#### Bug Fixes
+- (**server**) cache the hashed bundles, keep index.html fresh - ([ece8790](https://github.com/PixiBixi/goose-multiplayer/commit/ece8790a0e0b13abd691fdc17e3dd05e42988c66)) - Jeremy Delgado
+- (**web**) degrade on a wire value the bundle has never heard of - ([b26a2bd](https://github.com/PixiBixi/goose-multiplayer/commit/b26a2bd76b14d63933c04a0a8d760d23aa74bd21)) - Jeremy Delgado
+#### Documentation
+- (**readme**) describe the version banner and the two cache rules - ([bb84a77](https://github.com/PixiBixi/goose-multiplayer/commit/bb84a7791edd44b5fb59fce165479066d207692c)) - Jeremy Delgado
+- (**readme**) record that the wire is a version boundary - ([4f3a18c](https://github.com/PixiBixi/goose-multiplayer/commit/4f3a18c91aa0f8d7a26a0591219e70a357627b7f)) - Jeremy Delgado
+#### Miscellaneous Chores
+- (**scripts**) read the version cog stamps from one place - ([817fd0a](https://github.com/PixiBixi/goose-multiplayer/commit/817fd0a80b9d582fc98bf1198209c74b347ed3db)) - Jeremy Delgado
+
+- - -
+
 ## [v0.5.0](https://github.com/PixiBixi/goose-multiplayer/compare/29bb99a198148f6bebc6a38e93bdea00ae395068..v0.5.0) - 2026-08-25
 #### Features
 - (**engine**) three doors out of the well and the prison - ([29bb99a](https://github.com/PixiBixi/goose-multiplayer/commit/29bb99a198148f6bebc6a38e93bdea00ae395068)) - Jeremy Delgado

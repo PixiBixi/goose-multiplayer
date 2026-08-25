@@ -91,8 +91,11 @@ export const en = {
   'over.again': 'Play again',
 
   'step.move': 'Roll of {by}: from square {from} to square {to}.',
+  'step.opening9': 'Opening nine: {a} and {b} place the pawn on square {to}.',
   'step.goose': 'The goose on square {from} rolls {by} again and flies to square {to}.',
   'step.bounce': 'Square 63 is overshot by {overshoot}: bounce back to square {to}.',
+  'step.overshoot':
+    'Square 63 is overshot by {overshoot}: with no exact finish, the Garden is reached.',
   'step.bridge': 'The Bridge: on to square {to}.',
   'step.dice': 'The Dice: on to square {to}.',
   'step.maze': 'The Maze: back to square {to}.',
@@ -104,7 +107,60 @@ export const en = {
   'step.double': 'Double {face}: {name} rolls again.',
   'step.triplePass': '{name} rolls a third double, the turn passes.',
   'step.tripleRestart': '{name} rolls a third double and starts over.',
+  'step.deadlock': 'Nobody can play any more: the round stops with no winner.',
   'step.win': '{name} reaches the Garden and wins the game.',
+
+  'card.eyebrow': 'Rule',
+  'card.dismiss': 'Dismiss the rule card',
+
+  'card.opening9.name': 'The opening nine',
+  'card.opening9.why':
+    'A 9 on the opening roll goes straight to 26 or 53. Without this rule the geese carry you 9 by 9 to 63 and the game is over before it began.',
+  'card.goose.name': 'The Goose',
+  'card.goose.why':
+    'The thirteen geese are what the game is named after: landing on one rolls the throw again instead of ending it, and a chain can cross half the board.',
+  'card.bridge.name': 'The Bridge',
+  'card.bridge.why':
+    'The Bridge carries you six squares in one go, from 6 to 12: it is the only free shortcut on the board, and it falls early enough to launch a game.',
+  'card.dice.name': 'The Dice',
+  'card.dice.why':
+    'The two dice squares answer each other, 26 to 53 and 53 back to 26. The arrival square fires nothing, or the pawn would shuttle between them for ever.',
+  'card.inn.name': 'The Inn',
+  'card.inn.why':
+    'The Inn costs a turn, not a square: you do not go backwards, you wait, and it is the only trap on the board paid for in time.',
+  'card.well.name': 'The Well',
+  'card.well.why':
+    'The Well keeps whoever falls in until somebody else takes their place: it is the trap nobody climbs out of alone.',
+  'card.prison.name': 'The Prison',
+  'card.prison.why':
+    'The Prison holds you like the Well, but eleven squares from the Garden: landing there so close to the end is the dearest punishment on the board.',
+  'card.maze.name': 'The Maze',
+  'card.maze.why':
+    'You lose your way: the Maze sends you back to square 30 and takes twelve squares off somebody who had just passed halfway.',
+  'card.death.name': 'Death',
+  'card.death.why':
+    'Five squares from the Garden, Death sends you back to square 1 and makes you start over: it is the cruelty the game is after, and it lands just as you thought you had arrived.',
+  'card.bounce.name': 'The exact finish',
+  'card.bounce.why':
+    'You have to land square on 63: the surplus counts backwards and pushes you back by as much, so the last square is won rather than caught by excess.',
+  'card.overshoot.name': 'The open finish',
+  'card.overshoot.why':
+    'This table plays without the exact finish: passing 63 is enough to win, and the surplus is dropped instead of bouncing you back.',
+  'card.rescue.name': 'The Rescue',
+  'card.rescue.why':
+    'You only leave the Well or the Prison when another player lands there and takes your place: without this rule an unlucky seat would sit there until the round ended.',
+  'card.double.name': 'The Double',
+  'card.double.why':
+    'A house rule: a double hands the same seat another roll. Neither the printed board nor any known edition carries it, the game of the goose grants its re-rolls through the goose squares.',
+  'card.tripleDouble.name': 'The third double',
+  'card.tripleDouble.why':
+    'The cap at three exists so a lucky seat cannot hold the table for ever, and because the engine has a termination proof that no added rule may reopen.',
+  'card.garden.name': 'The Garden',
+  'card.garden.why':
+    'Square 63 is the Garden, at the centre of the spiral: it ends the round, and it is the only square on the board that sends you nowhere.',
+  'card.deadlock.name': 'Table locked',
+  'card.deadlock.why':
+    'With rescue off, every seat still in play can end up blocked: the round then stops with no winner rather than waiting on a player who will never move again.',
 
   'square.plain': 'Square {n}',
   'square.goose': 'Goose',

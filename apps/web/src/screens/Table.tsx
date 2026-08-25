@@ -6,19 +6,36 @@ import { ChatPanel } from '../components/ChatPanel.js'
 import { Die } from '../components/Die.js'
 import type { DieState } from '../components/Die.js'
 import { GameOver } from '../components/GameOver.js'
+import { RuleCard } from '../components/RuleCard.js'
 import { Seat } from '../components/Seat.js'
 import { SquareIcon } from '../components/SquareIcon.js'
 import type { Tone } from '../lib/square-mark.js'
 import { useDiceTumble } from '../hooks/useDiceTumble.js'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion.js'
+import { useRuleCards } from '../hooks/useRuleCards.js'
 import { turnSignature, useStepPlayback } from '../hooks/useStepPlayback.js'
 import { t } from '../i18n/index.js'
-import { describeStep } from '../lib/describe-step.js'
+import { describeStep, flightOf } from '../lib/describe-step.js'
 
 /* Slow enough that a goose chain reads as two separate hops and a bounce
    reads as going backwards, quick enough that a six step chain does not hold
    the table for four seconds. */
 const STEP_MS = 450
+
+/* A teleport does not step, it flies, and the whole point is that fifty three
+   squares look like fifty three squares. Fixed, not proportional: at a speed
+   that suits a six square hop the opening nine would hold the table for eight
+   seconds, and at a speed that suits the opening nine the bridge would be a
+   flicker. The step that carries a flight gets a little more than the flight
+   itself, so the pawn lands before the next line of the chain arrives. */
+const FLIGHT_MS = 1200
+const FLIGHT_STEP_MS = FLIGHT_MS + 250
+
+/* Long enough to read one sentence, short enough that a chain firing three
+   rules does not become an interlude. It holds the roll button down while it
+   is up, so the table never has a card explaining the turn that has already
+   been overtaken by the next one. */
+const CARD_MS = 3000
 
 /* The tumble. Long enough to register as a throw, short enough that the
    player is not waiting on it, and the frame rate is the face changing, not
@@ -65,6 +82,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
   })
   const playback = useStepPlayback(view.lastTurn, {
     stepMs: STEP_MS,
+    dwellFor: (step) => (flightOf(step) ? FLIGHT_STEP_MS : undefined),
     enabled: tumble.settled,
     reduced,
   })
@@ -83,11 +101,21 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
     }
   }, [awaitingRoll])
 
+  /* The rule that just fired, named by the engine and explained beside the
+     board. Fed off the steps that have actually played, so the card lands with
+     the pawn rather than ahead of it. */
+  const revealed = tumble.settled ? playback.played : 0
+  const cards = useRuleCards(signature, view.lastTurn?.steps ?? [], revealed, {
+    dwellMs: CARD_MS,
+    reduced,
+  })
+
   /* The chain on screen, and the whole sequence. They are not the same thing:
      the chain is what the dice and the pawn are still saying, the sequence
-     also covers the round trip between the click and the server's answer. */
+     also covers the round trip between the click and the server's answer and
+     the card still explaining the rule that fired. */
   const chainPlaying = view.lastTurn !== null && (!tumble.settled || !playback.done)
-  const playing = awaitingRoll || chainPlaying
+  const playing = awaitingRoll || chainPlaying || cards.holds
 
   /* Whose turn it is on screen, held on the seat that is still resolving. The
      next seat's name appearing in the heading while the dice are still
@@ -101,7 +129,6 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
      appears when its own step plays rather than the whole chain landing at
      once. */
   const [log, setLog] = useState<LogLine[]>([])
-  const revealed = tumble.settled ? playback.played : 0
   useEffect(() => {
     const turn = view.lastTurn
     if (turn === null) {
@@ -161,6 +188,22 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
     )
   }, [view.seats, view.lastTurn, playback.done, playback.played, playback.square])
 
+  /* The pawn in the air. Which steps earn a flight is read off the step kind,
+     never off the distance between two squares: the engine is the only thing
+     that knows a teleport fired, and a six square bridge is as much a teleport
+     as a fifty three square opening nine.
+
+     Reduced motion gets no flight at all. The pawn is already on the square
+     the server put it on, which is the whole of the information. */
+  const flight = useMemo(() => {
+    const turn = view.lastTurn
+    if (turn === null || reduced || playback.done || playback.played === 0) return null
+    const shown = turn.steps[playback.played - 1]
+    const route = shown ? flightOf(shown) : null
+    if (route === null) return null
+    return { seat: turn.seat, from: route.from, to: route.to, durationMs: FLIGHT_MS }
+  }, [view.lastTurn, reduced, playback.done, playback.played])
+
   const yourTurn = turnSeat === view.you.seat
   /* Disabled for the whole sequence, dice and walk together: a second roll
      fired mid-chain would land a new turn on top of the one still playing. */
@@ -178,7 +221,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
   return (
     <div className="table">
       <div className="table-board">
-        <Board seats={seats} highlight={playback.square} />
+        <Board seats={seats} highlight={playback.square} flight={flight} />
         <p className="legend">
           {LEGEND.map((entry) => (
             <span key={entry.tone}>
@@ -191,6 +234,10 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
       </div>
 
       <div className="table-rail">
+        {/* Beside the board and never over it: the rule is being explained
+            about a pawn the player is still looking at. */}
+        {cards.current ? <RuleCard card={cards.current} onDismiss={cards.dismiss} /> : null}
+
         <section
           className="panel stack turn-panel"
           data-testid="turn-panel"

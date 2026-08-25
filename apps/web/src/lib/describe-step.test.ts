@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeStep, landingOf, originOf } from './describe-step.js'
+import { describeStep, flightOf, landingOf, originOf } from './describe-step.js'
 
 const names = ['Jérémy', 'Claire']
 
@@ -15,7 +15,9 @@ describe('describeStep', () => {
   })
 
   it('names the seat a rescue frees', () => {
-    expect(describeStep({ kind: 'rescue', seat: 1, at: 31, to: 20 }, names)).toContain('Claire')
+    expect(
+      describeStep({ kind: 'rescue', seat: 1, at: 31, to: 20, reason: 'well' }, names),
+    ).toContain('Claire')
   })
 
   it('tells the well and the prison apart', () => {
@@ -25,6 +27,29 @@ describe('describeStep', () => {
     expect(describeStep({ kind: 'blocked', seat: 0, at: 52, reason: 'prison' }, names)).toMatch(
       /prison/i,
     )
+  })
+
+  it('names the opening nine off its own step, dice included', () => {
+    /* The defect this whole file exists to close: the engine used to emit an
+       ordinary move, so the line read "de la case 0 a la case 53" and the rule
+       that fired had no name anywhere on screen. */
+    const line = describeStep({ kind: 'opening9', from: 0, to: 53, dice: [5, 4] }, names)
+    expect(line).toMatch(/neuf d'ouverture/i)
+    expect(line).toContain('53')
+    expect(line).toContain('5')
+    expect(line).toContain('4')
+  })
+
+  it('tells a dropped surplus from a rebound', () => {
+    const bounce = describeStep({ kind: 'bounce', from: 66, to: 60, overshoot: 3 }, names)
+    const over = describeStep({ kind: 'overshoot', from: 66, to: 63, overshoot: 3 }, names)
+    expect(bounce).toMatch(/rebond/i)
+    expect(over).toMatch(/jardin/i)
+    expect(over).not.toBe(bounce)
+  })
+
+  it('says out loud that a round ended with nobody able to play', () => {
+    expect(describeStep({ kind: 'deadlock' }, names)).toMatch(/sans vainqueur/i)
   })
 
   it('says why the same seat is rolling again', () => {
@@ -57,6 +82,9 @@ describe('describeStep', () => {
       describeStep({ kind: 'double', seat: 0, dice: [2, 2] }, names),
       describeStep({ kind: 'tripleDouble', seat: 0, outcome: 'pass', from: 9, to: 9 }, names),
       describeStep({ kind: 'tripleDouble', seat: 0, outcome: 'restart', from: 9, to: 0 }, names),
+      describeStep({ kind: 'opening9', from: 0, to: 26, dice: [6, 3] }, names),
+      describeStep({ kind: 'overshoot', from: 66, to: 63, overshoot: 3 }, names),
+      describeStep({ kind: 'deadlock' }, names),
     ]
     for (const line of all) expect(line).not.toContain('—')
   })
@@ -71,7 +99,7 @@ describe('landingOf', () => {
 
   it('follows the pawn onto the square a trap holds it on', () => {
     expect(landingOf({ kind: 'blocked', seat: 0, at: 31, reason: 'well' })).toBe(31)
-    expect(landingOf({ kind: 'rescue', seat: 1, at: 31, to: 4 })).toBe(31)
+    expect(landingOf({ kind: 'rescue', seat: 1, at: 31, to: 4, reason: 'well' })).toBe(31)
     expect(landingOf({ kind: 'win', seat: 0, at: 63 })).toBe(63)
   })
 
@@ -95,5 +123,35 @@ describe('originOf', () => {
 
   it('has nothing to say about an empty chain', () => {
     expect(originOf([])).toBeNull()
+  })
+})
+
+describe('flightOf', () => {
+  it('flies the steps the engine named as teleports, whatever the distance', () => {
+    expect(flightOf({ kind: 'opening9', from: 0, to: 53, dice: [5, 4] })).toEqual({
+      from: 0,
+      to: 53,
+    })
+    expect(flightOf({ kind: 'bridge', from: 6, to: 12 })).toEqual({ from: 6, to: 12 })
+    expect(flightOf({ kind: 'dice', from: 26, to: 53 })).toEqual({ from: 26, to: 53 })
+    expect(flightOf({ kind: 'maze', from: 42, to: 30 })).toEqual({ from: 42, to: 30 })
+    expect(flightOf({ kind: 'death', from: 58, to: 1 })).toEqual({ from: 58, to: 1 })
+  })
+
+  it('leaves an ordinary advance to walk, however far it goes', () => {
+    /* Distance is not what makes a flight. A twelve square roll is a walk and
+       a six square bridge is a teleport, and only the engine knows which. */
+    expect(flightOf({ kind: 'move', from: 0, to: 12, by: 12 })).toBeNull()
+    expect(flightOf({ kind: 'goose', from: 5, to: 14, by: 9 })).toBeNull()
+    expect(flightOf({ kind: 'bounce', from: 66, to: 60, overshoot: 3 })).toBeNull()
+  })
+
+  it('does not fly a third double that only passes the turn', () => {
+    expect(
+      flightOf({ kind: 'tripleDouble', seat: 0, outcome: 'pass', from: 20, to: 20 }),
+    ).toBeNull()
+    expect(
+      flightOf({ kind: 'tripleDouble', seat: 0, outcome: 'restart', from: 20, to: 0 }),
+    ).toEqual({ from: 20, to: 0 })
   })
 })

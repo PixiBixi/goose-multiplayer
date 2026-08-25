@@ -2,8 +2,9 @@ import { BOARD_SIZE } from '@goose/engine'
 import type { JSX } from 'react'
 import { useMemo } from 'react'
 import { t } from '../i18n/index.js'
-import { gridCells, gridSize } from '../lib/board-layout.js'
+import { gridCells, gridSize, pathSquares } from '../lib/board-layout.js'
 import { markFor } from '../lib/square-mark.js'
+import { BoardFlight } from './BoardFlight.js'
 import { initialOf, pawnsBySquare, type BoardProps } from './board-types.js'
 import { SquareIconAt } from './SquareIcon.js'
 
@@ -13,7 +14,7 @@ const LAYOUT = { cols: 7, cell: 46, gap: 5 }
 /** The strip under the grid where pawns that have not entered yet wait. */
 const START_STRIP = 40
 
-export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
+export function BoardGrid({ seats, highlight, flight = null }: BoardProps): JSX.Element {
   const cells = useMemo(() => gridCells(LAYOUT), [])
   const { width, height } = gridSize(LAYOUT)
   const pawns = pawnsBySquare(seats)
@@ -24,6 +25,12 @@ export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
     if (!cell) return { x: width / 2, y: height + START_STRIP / 2 }
     return { x: cell.x + half, y: cell.y + half }
   }
+
+  /* The same route as the spiral, read off the same square list: on the grid
+     the printed track is the boustrophedon, so the flight runs along the row
+     and turns at the end of it rather than cutting across the block. */
+  const flier = flight === null ? null : seats.find((seat) => seat.seat === flight.seat)
+  const route = flight === null ? [] : pathSquares(flight.from, flight.to).map(centreOf)
 
   return (
     <svg
@@ -102,6 +109,10 @@ export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
 
       {[...pawns].flatMap(([square, sitting]) =>
         sitting.map((seat, slot) => {
+          /* The seat in the air is drawn by the flight, not here: two copies
+             of the same pawn, one already parked on the destination, would
+             give the arrival away before the pawn had left. */
+          if (flight !== null && seat.seat === flight.seat) return null
           const base = centreOf(square)
           const spread = (slot - (sitting.length - 1) / 2) * (half * 0.62)
           const x = square === 0 ? width / 2 + spread * 2 : base.x + spread
@@ -138,6 +149,21 @@ export function BoardGrid({ seats, highlight }: BoardProps): JSX.Element {
           )
         }),
       )}
+
+      {flight !== null && flier ? (
+        <BoardFlight
+          /* Remounted per flight: the component owns a clock, and a new route
+             has to start it over rather than carry on from where the last one
+             got to. */
+          key={`${String(flight.seat)}:${String(flight.from)}:${String(flight.to)}`}
+          points={route}
+          colour={flier.colour}
+          initial={initialOf(flier.name)}
+          radius={half * 0.48}
+          durationMs={flight.durationMs}
+          label={`${flier.name}: ${t('seat.atSquare', { square: flight.to })}`}
+        />
+      ) : null}
 
       <text
         x={4}

@@ -10,10 +10,16 @@ export function describeStep(step: Step, names: string[]): string {
   switch (step.kind) {
     case 'move':
       return t('step.move', { by: step.by, from: step.from, to: step.to })
+    case 'opening9':
+      /* The dice are the reason for the destination, so they are what the line
+         says. Which pair goes where is the engine's business, not this one's. */
+      return t('step.opening9', { a: step.dice[0] ?? 0, b: step.dice[1] ?? 0, to: step.to })
     case 'goose':
       return t('step.goose', { from: step.from, by: step.by, to: step.to })
     case 'bounce':
       return t('step.bounce', { overshoot: step.overshoot, to: step.to })
+    case 'overshoot':
+      return t('step.overshoot', { overshoot: step.overshoot, to: step.to })
     case 'bridge':
       return t('step.bridge', { to: step.to })
     case 'dice':
@@ -40,6 +46,8 @@ export function describeStep(step: Step, names: string[]): string {
         name: who(step.seat),
         from: step.from,
       })
+    case 'deadlock':
+      return t('step.deadlock')
     case 'win':
       return t('step.win', { name: who(step.seat), at: step.at })
   }
@@ -52,8 +60,10 @@ export function describeStep(step: Step, names: string[]): string {
 export function landingOf(step: Step): Square | null {
   switch (step.kind) {
     case 'move':
+    case 'opening9':
     case 'goose':
     case 'bounce':
+    case 'overshoot':
     case 'bridge':
     case 'dice':
     case 'maze':
@@ -72,6 +82,7 @@ export function landingOf(step: Step): Square | null {
       return clamp(step.at)
     case 'skip':
     case 'double':
+    case 'deadlock':
       return null
   }
 }
@@ -82,6 +93,29 @@ export function originOf(steps: Step[]): Square | null {
   const first = steps[0]
   if (!first || !('from' in first)) return null
   return clamp(first.from)
+}
+
+/* The steps that move a pawn somewhere it did not walk to. They are the ones
+   worth flying along the spiral, and the list is a list of step kinds on
+   purpose: the distance between two squares is not what makes a teleport, the
+   rule that fired is, and only the engine knows that. */
+export function flightOf(step: Step): { from: Square; to: Square } | null {
+  switch (step.kind) {
+    case 'opening9':
+    case 'bridge':
+    case 'dice':
+    case 'maze':
+    case 'death':
+    case 'tripleDouble': {
+      const from = clamp(step.from)
+      const to = clamp(step.to)
+      /* A third double that only passes the turn points at the square the seat
+         is already on. Nothing to fly. */
+      return from === to ? null : { from, to }
+    }
+    default:
+      return null
+  }
 }
 
 function clamp(square: number): Square {

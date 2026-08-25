@@ -182,6 +182,7 @@ describe('Table', () => {
 describe('Table, the roll it plays out', () => {
   const TUMBLE_MS = 900
   const STEP_MS = 450
+  const CARD_MS = 3000
 
   it('keeps the result unreadable until the tumble ends, then lands on it', () => {
     vi.useFakeTimers()
@@ -305,7 +306,103 @@ describe('Table, the roll it plays out', () => {
     act(() => {
       vi.advanceTimersByTime(STEP_MS)
     })
+    /* The chain has finished, and the goose card is still explaining why the
+       oie relaunches. The button belongs to the card until it goes: a roll
+       fired now would land a new turn on top of the rule being read. */
+    expect(roll).toBeDisabled()
+    expect(panel).toHaveAttribute('data-playing', 'true')
+    expect(screen.getByTestId('rule-card')).toHaveAttribute('data-rule', 'goose')
+
+    act(() => {
+      vi.advanceTimersByTime(CARD_MS)
+    })
+    expect(screen.queryByTestId('rule-card')).toBeNull()
     expect(roll).toBeEnabled()
     expect(panel).toHaveAttribute('data-playing', 'false')
+  })
+
+  const openingNine = () =>
+    makeView({
+      phase: 'playing',
+      lastTurn: {
+        seat: 0,
+        dice: [5, 4],
+        steps: [{ kind: 'opening9', from: 0, to: 53, dice: [5, 4] }],
+      },
+      turn: { seat: 1, legalMoves: [], deadlineAt: null },
+    })
+
+  it('names the opening nine and says why the rule is there at all', () => {
+    /* The complaint this whole change answers: a 9 from the start square put
+       the pawn on 53 and the only thing on screen was "de la case 0 à la case
+       53". The rule that fired now has a name and a reason beside the board. */
+    vi.useFakeTimers()
+    setup(openingNine(), false)
+
+    act(() => {
+      vi.advanceTimersByTime(TUMBLE_MS)
+    })
+    const card = screen.getByTestId('rule-card')
+    expect(card).toHaveAttribute('data-rule', 'opening9')
+    expect(card).toHaveTextContent("Le neuf d'ouverture")
+    expect(card).toHaveTextContent(/sans cette règle/i)
+    expect(card).toHaveTextContent(/finie d'entrée/i)
+  })
+
+  it('flies the pawn along the spiral rather than stepping it to fifty three', () => {
+    vi.useFakeTimers()
+    const { container } = setup(openingNine(), false)
+
+    act(() => {
+      vi.advanceTimersByTime(TUMBLE_MS)
+    })
+    expect(container.querySelector('[data-testid="board-flight"]')).not.toBeNull()
+    /* And the button is down for the whole flight, not just for a step of
+       four hundred and fifty milliseconds. */
+    const roll = screen.getByRole('button', { name: 'Lancer les dés' })
+    act(() => {
+      vi.advanceTimersByTime(STEP_MS * 2)
+    })
+    expect(container.querySelector('[data-testid="board-flight"]')).not.toBeNull()
+    expect(roll).toBeDisabled()
+  })
+
+  it('gives the card back on a click, and the table with it', async () => {
+    const { user } = setup(openingNine(), false)
+    /* Real timers here: the click is what dismisses the card, and userEvent
+       needs a clock that runs. */
+    await vi.waitFor(
+      () => {
+        expect(screen.getByTestId('rule-card')).toBeInTheDocument()
+      },
+      { timeout: 4000 },
+    )
+    await user.click(screen.getByTestId('rule-card'))
+    expect(screen.queryByTestId('rule-card')).toBeNull()
+  })
+
+  it('puts no reading deadline on the card under reduced motion', () => {
+    vi.useFakeTimers()
+    /* The same chain, but the turn came straight back to this seat, so the
+       button is a real question rather than one the server already answered. */
+    setup(
+      makeView({
+        phase: 'playing',
+        lastTurn: {
+          seat: 0,
+          dice: [5, 4],
+          steps: [{ kind: 'opening9', from: 0, to: 53, dice: [5, 4] }],
+        },
+      }),
+      true,
+    )
+    expect(screen.getByTestId('rule-card')).toHaveAttribute('data-rule', 'opening9')
+    act(() => {
+      vi.advanceTimersByTime(CARD_MS * 4)
+    })
+    expect(screen.getByTestId('rule-card')).toBeInTheDocument()
+    /* And it holds nothing up: the chain is already all on screen, so the
+       seat on turn rolls whenever it likes and the card waits to be clicked. */
+    expect(screen.getByRole('button', { name: 'Lancer les dés' })).toBeEnabled()
   })
 })

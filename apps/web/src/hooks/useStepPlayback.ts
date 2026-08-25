@@ -1,4 +1,4 @@
-import type { Square } from '@goose/engine'
+import type { Square, Step } from '@goose/engine'
 import type { TableView } from '@goose/protocol'
 import { useEffect, useState } from 'react'
 import { landingOf, originOf } from '../lib/describe-step.js'
@@ -13,6 +13,10 @@ export type Playback = {
 
 export type PlaybackOptions = {
   stepMs: number
+  /* How long the step currently on screen gets, when it is worth more than
+     the others. A teleport flies the whole route and needs the time to do it;
+     everything else keeps stepMs. Returning nothing falls back to stepMs. */
+  dwellFor?: (step: Step) => number | undefined
   /** False holds the chain at its origin: the dice have not settled yet. */
   enabled?: boolean
   reduced?: boolean
@@ -48,17 +52,24 @@ export function useStepPlayback(lastTurn: TableView['lastTurn'], opts: PlaybackO
      its own moment on screen before the roll button comes back. */
   const done = steps.length === 0 || counter > steps.length
 
+  /* The step on screen is the one that has just played, so it is the one that
+     says how long this beat lasts. A number in the dependency list, not the
+     callback that produced it: a fresh closure on every render would restart
+     the timer on every render. */
+  const onScreen = played > 0 ? steps[played - 1] : undefined
+  const dwell = (onScreen ? opts.dwellFor?.(onScreen) : undefined) ?? opts.stepMs
+
   useEffect(() => {
     if (!enabled || reduced || done) return
     const timer = setTimeout(() => {
       setWalked((previous) =>
         previous.key === key ? { key, played: Math.max(previous.played, 1) + 1 } : previous,
       )
-    }, opts.stepMs)
+    }, dwell)
     return () => {
       clearTimeout(timer)
     }
-  }, [key, played, done, enabled, reduced, opts.stepMs])
+  }, [key, played, done, enabled, reduced, dwell])
 
   /* Before the first step has played, the pawn stands where the chain started.
      That square is the server's own `from`, not a position worked out here. */

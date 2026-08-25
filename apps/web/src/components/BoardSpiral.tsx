@@ -2,8 +2,9 @@ import { BOARD_SIZE } from '@goose/engine'
 import type { JSX } from 'react'
 import { useMemo } from 'react'
 import { t } from '../i18n/index.js'
-import { spiralPoints } from '../lib/board-layout.js'
+import { pathSquares, spiralPoints } from '../lib/board-layout.js'
 import { markFor } from '../lib/square-mark.js'
+import { BoardFlight } from './BoardFlight.js'
 import { initialOf, pawnsBySquare, type BoardProps } from './board-types.js'
 import { SquareIconAt } from './SquareIcon.js'
 
@@ -16,7 +17,7 @@ const VIEW_HEIGHT = 640
 const GARDEN_RADIUS = CELL_RADIUS * 2.3
 const CENTRE = SIZE / 2
 
-export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
+export function BoardSpiral({ seats, highlight, flight = null }: BoardProps): JSX.Element {
   const points = useMemo(() => spiralPoints({ size: SIZE, cellRadius: CELL_RADIUS }), [])
   const pawns = pawnsBySquare(seats)
   const garden = markFor(BOARD_SIZE)
@@ -25,6 +26,12 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
     square === BOARD_SIZE
       ? { x: CENTRE, y: CENTRE }
       : (points[square - 1] ?? { x: CENTRE, y: START_Y })
+
+  /* The route a flight follows, square centre by square centre: the real
+     spiral, not a straight line across the board between two squares that
+     happen to sit near each other on the page. */
+  const flier = flight === null ? null : seats.find((seat) => seat.seat === flight.seat)
+  const route = flight === null ? [] : pathSquares(flight.from, flight.to).map(centreOf)
 
   return (
     <svg
@@ -153,6 +160,10 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
 
       {[...pawns].flatMap(([square, sitting]) =>
         sitting.map((seat, slot) => {
+          /* The seat in the air is drawn by the flight, not here: two copies
+             of the same pawn, one already parked on the destination, would
+             give the arrival away before the pawn had left. */
+          if (flight !== null && seat.seat === flight.seat) return null
           const base = centreOf(square)
           const angle = (-90 + slot * 58) * (Math.PI / 180)
           const offset = square === 0 ? CELL_RADIUS * 1.2 : CELL_RADIUS + 4
@@ -193,6 +204,21 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
           )
         }),
       )}
+
+      {flight !== null && flier ? (
+        <BoardFlight
+          /* Remounted per flight: the component owns a clock, and a new route
+             has to start it over rather than carry on from where the last one
+             got to. */
+          key={`${String(flight.seat)}:${String(flight.from)}:${String(flight.to)}`}
+          points={route}
+          colour={flier.colour}
+          initial={initialOf(flier.name)}
+          radius={CELL_RADIUS * 0.56}
+          durationMs={flight.durationMs}
+          label={`${flier.name}: ${t('seat.atSquare', { square: flight.to })}`}
+        />
+      ) : null}
     </svg>
   )
 }

@@ -5,7 +5,7 @@ import type { BoardProps } from './board-types.js'
 import { BoardGrid } from './BoardGrid.js'
 import { BoardSpiral } from './BoardSpiral.js'
 
-export function Board({ seats, highlight }: BoardProps): JSX.Element {
+export function Board({ seats, highlight, flight = null }: BoardProps): JSX.Element {
   const host = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState<number | null>(null)
 
@@ -29,8 +29,12 @@ export function Board({ seats, highlight }: BoardProps): JSX.Element {
 
   return (
     <div className="board" ref={host} data-renderer={renderer ?? 'measuring'}>
-      {renderer === 'grid' ? <BoardGrid seats={seats} highlight={highlight} /> : null}
-      {renderer === 'spiral' ? <BoardSpiral seats={seats} highlight={highlight} /> : null}
+      {renderer === 'grid' ? (
+        <BoardGrid seats={seats} highlight={highlight} flight={flight} />
+      ) : null}
+      {renderer === 'spiral' ? (
+        <BoardSpiral seats={seats} highlight={highlight} flight={flight} />
+      ) : null}
     </div>
   )
 }

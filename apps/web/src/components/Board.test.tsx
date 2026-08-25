@@ -73,4 +73,42 @@ describe('Board', () => {
     const { container } = render(<Board seats={seats} highlight={31} />)
     expect(container.querySelector('.board-highlight')).not.toBeNull()
   })
+
+  it('flies a pawn along the printed track, in both renderers', () => {
+    const flight = { seat: 0, from: 0, to: 53, durationMs: 1200 }
+    for (const width of [400, 1000]) {
+      resizeTo(width)
+      const { container, unmount } = render(<Board seats={seats} highlight={53} flight={flight} />)
+      const trail = container.querySelector('[data-testid="board-flight"] path')
+      expect(trail, `renderer at ${width}px`).not.toBeNull()
+      /* A command per square crossed, not two points with a straight line
+         between them: the flight follows the spiral and the boustrophedon the
+         way a pawn walked by hand would. */
+      const commands = (trail?.getAttribute('d') ?? '').split(' ').length
+      expect(commands, `renderer at ${width}px`).toBe(54)
+      unmount()
+    }
+  })
+
+  it('draws the flying pawn once, in the air rather than parked on arrival', () => {
+    /* Two copies of the same pawn, one already sitting on the destination,
+       would give the arrival away before the pawn had left the start. */
+    resizeTo(1000)
+    const { container } = render(
+      <Board
+        seats={seats}
+        highlight={53}
+        flight={{ seat: 0, from: 0, to: 53, durationMs: 1200 }}
+      />,
+    )
+    expect(container.querySelectorAll('[data-pawn]')).toHaveLength(1)
+    expect(container.querySelector('[data-pawn="1"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="board-flight"]')).not.toBeNull()
+  })
+
+  it('draws no flight when nobody is in the air', () => {
+    resizeTo(1000)
+    const { container } = render(<Board seats={seats} highlight={null} />)
+    expect(container.querySelector('[data-testid="board-flight"]')).toBeNull()
+  })
 })

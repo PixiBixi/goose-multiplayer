@@ -239,6 +239,12 @@ button.primary:disabled {
 .board {
   width: 100%;
   min-width: 0;
+  /* The spiral viewBox is taller than it is wide, so an uncapped board on a
+     wide window pushes its own bottom below the fold. The cap has to stay
+     clear of BOARD_GRID_BREAKPOINT: capping on viewport height instead put
+     the container under 700px and flipped a 1440px desktop to the grid. */
+  max-width: min(100%, 760px);
+  margin-inline: auto;
 }
 
 .board-svg {

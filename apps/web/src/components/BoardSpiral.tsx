@@ -11,8 +11,8 @@ const SIZE = 600
 const CELL_RADIUS = 24
 /* The strip under square 1 where pawns that have not entered the board yet
    wait. It sits below the spiral, hence a viewBox taller than it is wide. */
-const START_Y = 634
-const VIEW_HEIGHT = 660
+const START_Y = 618
+const VIEW_HEIGHT = 640
 const GARDEN_RADIUS = CELL_RADIUS * 2.3
 const CENTRE = SIZE / 2
 
@@ -137,10 +137,12 @@ export function BoardSpiral({ seats, highlight }: BoardProps): JSX.Element {
         />
       ) : null}
 
+      {/* Alongside the waiting pawns, not under square 1: square 1 sits at the
+          very bottom of the spiral and the caption ran straight through it. */}
       <text
-        x={CENTRE}
-        y={START_Y - 24}
-        textAnchor="middle"
+        x={8}
+        y={START_Y + 5}
+        textAnchor="start"
         fontFamily="var(--body)"
         fontSize={15}
         letterSpacing="0.1em"

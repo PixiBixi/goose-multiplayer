@@ -17,6 +17,17 @@ export function createApp(): Express {
   })
 
   if (existsSync(WEB_DIST)) {
+    /* Two rules, and getting them the wrong way round is how a deploy stays
+       invisible for a week.
+
+       /assets holds the files vite content-hashes: index-BSmTx1hc.js can never
+       change under that name, so it is cached for a year and `immutable` stops
+       the browser revalidating it at all.
+
+       index.html is the file that POINTS at those hashes, so it keeps
+       max-age=0 and revalidates on every load. It is served both by the static
+       mount below and by the SPA fallback, and neither adds a max-age. */
+    app.use('/assets', express.static(join(WEB_DIST, 'assets'), { maxAge: '1y', immutable: true }))
     app.use(express.static(WEB_DIST))
     /* Express 5 runs path-to-regexp 8, which rejects a bare '*': a wildcard
        has to be named. This line only executes once apps/web/dist exists, so

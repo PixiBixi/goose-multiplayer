@@ -71,6 +71,53 @@ describe('RoomManager', () => {
     expect(onView).toHaveBeenCalledWith(code)
   })
 
+  /* Every die a 1, so every roll is a double and the house rule fires on
+     every turn. A seeded rng would make this test a story about luck. */
+  const alwaysOnes = () => 0
+
+  it('lets the seat that rolled a double roll again instead of passing the turn', () => {
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: alwaysOnes, onView: () => {} })
+    const code = m.create('a', 's0')
+    m.join(code, 'b', 's1')
+    m.start(code, 0)
+
+    m.roll(code, 0)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
+    expect(m.get(code)?.view(0).lastTurn?.steps.at(-1)).toEqual({
+      kind: 'double',
+      seat: 0,
+      dice: [1, 1],
+    })
+
+    m.roll(code, 0)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
+
+    // The third is the cap: the turn passes whatever the dice said.
+    m.roll(code, 0)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+    expect(() => {
+      m.roll(code, 0)
+    }).toThrow(/turn/i)
+  })
+
+  it('keeps the turn timer on the seat that is still on turn after a double', () => {
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: alwaysOnes, onView: () => {} })
+    const code = m.create('a', 's0')
+    m.join(code, 'b', 's1')
+    m.start(code, 0)
+
+    // Nobody acts. The timer rolls for seat 0, which doubles and keeps the
+    // turn, so the next timer has to be armed for seat 0 again, not for 1.
+    clock.advance(TURN_TIMEOUT_MS)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
+    clock.advance(TURN_TIMEOUT_MS)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
+    clock.advance(TURN_TIMEOUT_MS)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+  })
+
   it('replays the same game from the same seed', () => {
     const play = () => {
       const clock = fakeClock()

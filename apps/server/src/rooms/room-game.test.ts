@@ -23,6 +23,26 @@ describe('Room, playing', () => {
     expect(view.lastTurn?.steps[0]).toEqual({ kind: 'move', from: 0, to: 2, by: 2 })
   })
 
+  it('keeps the turn with the seat that rolled a double', () => {
+    const r = started()
+    r.roll(0, [1, 1])
+    expect(r.view(0).turn.seat).toBe(0)
+    expect(r.view(0).turn.legalMoves).toEqual(['roll'])
+    expect(r.view(0).lastTurn?.steps.at(-1)).toEqual({ kind: 'double', seat: 0, dice: [1, 1] })
+  })
+
+  it('passes the turn on a double once the host turns the house rule off', () => {
+    // Proves the room hands its config to the engine rather than keeping a
+    // private copy of the rules.
+    const r = new Room('HKD4P2')
+    r.join('a', 's0')
+    r.join('b', 's1')
+    r.configure(0, { doubleAgain: false })
+    r.start(0)
+    r.roll(0, [1, 1])
+    expect(r.view(0).turn.seat).toBe(1)
+  })
+
   it('offers legal moves only to the seat on turn', () => {
     const r = started()
     expect(r.view(0).turn.legalMoves).toEqual(['roll'])

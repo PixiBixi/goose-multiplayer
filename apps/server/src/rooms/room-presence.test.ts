@@ -1,4 +1,4 @@
-import { makeRng } from '@goose/engine'
+import type { Rng } from '@goose/engine'
 import { describe, expect, it, vi } from 'vitest'
 import { DISCONNECT_GRACE_MS, RoomManager } from './room-manager.js'
 
@@ -29,10 +29,19 @@ function fakeClock() {
   }
 }
 
+/* Dice that alternate 1 and 4, so no roll is ever a double. These tests are
+   about the grace period and the turn moving on without an absent seat; the
+   doubles house rule keeping the turn on the roller would quietly make the
+   fixture say something else. */
+function neverDoubles(): Rng {
+  let call = 0
+  return () => (call++ % 2 === 0 ? 0 : 0.5)
+}
+
 function manager() {
   const clock = fakeClock()
   const onView = vi.fn()
-  const m = new RoomManager({ clock, rng: makeRng(7), onView })
+  const m = new RoomManager({ clock, rng: neverDoubles(), onView })
   return { m, clock, onView }
 }
 

@@ -24,6 +24,10 @@ export const clientSchemas = {
       twoDice: z.boolean().optional(),
       rescue: z.boolean().optional(),
       opening9: z.boolean().optional(),
+      doubleAgain: z.boolean().optional(),
+      /* Not a switch: neither value is an "off", so the wire carries the
+         choice itself rather than a boolean the client would have to map. */
+      tripleDouble: z.enum(['pass', 'restart']).optional(),
     })
     .strict(),
   startGame: z.object({}).strict(),

@@ -1,4 +1,4 @@
-import { makeRng, rollDice } from '@goose/engine'
+import { MAX_CONSECUTIVE_DOUBLES, makeRng, rollDice } from '@goose/engine'
 import type { Rng, Seat } from '@goose/engine'
 import { Room } from './room.js'
 import { makeRoomCode } from './room-code.js'
@@ -178,10 +178,16 @@ export class RoomManager {
      table. Bounded at one full lap so a table abandoned by everyone still
      arms a timer instead of spinning forever. Returns whether it resolved
      at least one seat, so a caller that must not arm a timer on an ordinary
-     turn (a prompt manual roll) only does so when this actually fired. */
+     turn (a prompt manual roll) only does so when this actually fired.
+
+     A lap is longer than the seat count: the doubles house rule can hand the
+     same seat up to MAX_CONSECUTIVE_DOUBLES rolls before the turn moves on,
+     and a bound of one roll per seat would leave a 'left' seat still holding
+     the turn when the loop gave up. */
   #skipLeftSeats(entry: Entry): boolean {
     let skipped = false
-    for (let hops = 0; hops <= entry.room.seatCount; hops++) {
+    const cap = entry.room.seatCount * MAX_CONSECUTIVE_DOUBLES
+    for (let hops = 0; hops <= cap; hops++) {
       if (entry.room.phase !== 'playing') break
       const view = entry.room.view(entry.room.hostSeat)
       const seat = view.turn.seat

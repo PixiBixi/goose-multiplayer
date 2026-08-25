@@ -49,6 +49,15 @@ describe('client schemas', () => {
     expect(clientSchemas.configureTable.safeParse({ twoDice: false }).success).toBe(true)
   })
 
+  it('carries the doubles house rule and what a third double costs', () => {
+    expect(clientSchemas.configureTable.safeParse({ doubleAgain: false }).success).toBe(true)
+    expect(clientSchemas.configureTable.safeParse({ tripleDouble: 'restart' }).success).toBe(true)
+    expect(clientSchemas.configureTable.safeParse({ tripleDouble: 'pass' }).success).toBe(true)
+    /* Only the two the engine knows: a third value would reach the reducer as
+       an outcome nothing implements. */
+    expect(clientSchemas.configureTable.safeParse({ tripleDouble: 'jail' }).success).toBe(false)
+  })
+
   it('rejects a card mode that v1 cannot run', () => {
     expect(clientSchemas.configureTable.safeParse({ mode: 'cards' }).success).toBe(false)
   })

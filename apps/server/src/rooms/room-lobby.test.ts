@@ -22,6 +22,9 @@ describe('Room, lobby', () => {
     r.join('guest', 's1')
     r.configure(0, { twoDice: false })
     expect(r.view(0).config.twoDice).toBe(false)
+    r.configure(0, { doubleAgain: false, tripleDouble: 'restart' })
+    expect(r.view(0).config.doubleAgain).toBe(false)
+    expect(r.view(0).config.tripleDouble).toBe('restart')
   })
 
   it('refuses a rule change from anyone but the host', () => {

@@ -83,6 +83,30 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
       break
     }
 
+    if (effect?.kind === 'block') {
+      /* Rescue is an effect of another seat arriving, not a timer: it belongs
+         here, in the reducer, so it is testable without a clock. */
+      if (next.config.rescue) {
+        const held = next.blocked.findIndex(
+          (reason, other) => other !== seat && reason !== null && next.positions[other] === square,
+        )
+        if (held >= 0) {
+          next.blocked[held] = null
+          next.positions[held] = origin
+          steps.push({ kind: 'rescue', seat: held, at: square, to: origin })
+        }
+      }
+      next.blocked[seat] = effect.reason
+      steps.push({ kind: 'blocked', seat, at: square, reason: effect.reason })
+      break
+    }
+
+    if (effect?.kind === 'inn') {
+      next.skipTurns[seat] = (next.skipTurns[seat] ?? 0) + effect.turns
+      steps.push({ kind: 'skip', seat, turns: effect.turns })
+      break
+    }
+
     break
   }
 

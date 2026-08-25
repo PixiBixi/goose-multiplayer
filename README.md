@@ -6,10 +6,10 @@ que le design validé et le plateau dessiné.
 
 ## Où en est le projet
 
-| Document | Ce qu'il contient |
-| --- | --- |
+| Document                                                                | Ce qu'il contient                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Design](docs/superpowers/specs/2026-08-25-goose-multiplayer-design.md) | Les règles figées, l'architecture, le modèle du tour, les décisions et les alternatives écartées |
-| [`design/`](design/) | Les maquettes : table desktop et mobile, salon, cases spéciales |
+| [`design/`](design/)                                                    | Les maquettes : table desktop et mobile, salon, cases spéciales                                  |
 
 Le canvas publié :
 <https://claude.ai/code/artifact/050ddd9e-a02a-4da7-a25b-9f30afdb845f>

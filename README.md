@@ -32,6 +32,49 @@ npm run format:check
 Le client ne connaît aucune règle. Le serveur envoie `legalMoves` dans chaque
 vue ; le client affiche ce qu'il reçoit et émet des intentions.
 
+## Docker
+
+L'image sert l'API, les WebSockets et le bundle du client sur un seul port.
+
+```bash
+docker compose up --build -d
+curl -fsS http://localhost:5050/healthz   # {"status":"ok"}
+docker compose down
+```
+
+Les deux étages du `Dockerfile` suivent `.nvmrc`, pas le plancher `engines` de
+`package.json` : `engines` dit ce que le code supporte encore, `.nvmrc` dit la
+version que la CI lint, couvre et joue au navigateur. `scripts/check-node-versions.sh`
+échoue quand les deux divergent, parce qu'elles ont déjà divergé en silence.
+
+`compose.traefik.yaml` déploie derrière un Traefik existant : trois
+remplacements à faire, aucun mapping `ports:` et le réseau en `external: true`.
+Publier 5050 sur l'hôte ouvrirait une entrée en HTTP clair qui contourne TLS.
+
+Les tables vivent en mémoire : ne jamais dépasser une réplique. Deux répliques
+en tiendraient chacune la moitié sans que l'une connaisse l'autre.
+
+## Intégration continue
+
+| Workflow             | Ce qu'il fait                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`             | Lint, format, types, tests sur Node 22, 24 et 26, couverture, puis construction de l'image, démarrage, sondes, et publication sur GHCR depuis `main` uniquement |
+| `release.yml`        | `cog bump` sur les Conventional Commits, tag, release GitHub, image taguée en semver                                                                            |
+| `github-actions.yml` | `zizmor` audite les workflows eux-mêmes : épinglage par SHA, permissions minimales, injection de template                                                       |
+
+Les actions sont épinglées par SHA de commit, avec la version en commentaire sur
+la même ligne. L'image publiée est celle que le pipeline a démarrée et sondée,
+retaguée et non reconstruite : une seconde construction publierait quelque chose
+dont personne n'a prouvé que ça démarre.
+
+Le crochet `pre-commit` couvre le trou entre `npm run verify` et la CI : `verify`
+ne lance ni `format:check` ni `build`, et un fichier non formaté est déjà passé
+en local avant de casser la CI.
+
+```bash
+pre-commit install
+```
+
 ## Où en est le projet
 
 | Document                                                                | Ce qu'il contient                                                                                |

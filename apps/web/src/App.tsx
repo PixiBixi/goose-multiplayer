@@ -1,13 +1,72 @@
+import type { TableConfig } from '@goose/engine'
 import type { JSX } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useGameSocket } from './hooks/useGameSocket.js'
 import { t } from './i18n/index.js'
+import { codeFromSearch, rememberRoom } from './lib/room-url.js'
+import { Home } from './screens/Home.js'
+import { Lobby } from './screens/Lobby.js'
 
 export function App(): JSX.Element {
+  const { view, status, error, send, dismiss, forget } = useGameSocket()
+  const initialCode = useMemo(() => codeFromSearch(window.location.search) ?? '', [])
+
+  /* Keeps the address bar in step with the table, so a refresh or a shared
+     link lands on the right code instead of on an empty home screen. */
+  useEffect(() => {
+    rememberRoom(view?.code ?? null)
+  }, [view?.code])
+
+  const leave = (): void => {
+    send('leaveRoom', {})
+    forget()
+  }
+
   return (
     <div className="shell">
       <header className="masthead">
         <h1>{t('app.title')}</h1>
         <p>{t('app.tagline')}</p>
+        <span className="connection" data-status={status}>
+          <span className="dot" />
+          {t(`status.${status}`)}
+        </span>
       </header>
+
+      {view !== null && error !== null ? (
+        <p className="alert" role="alert">
+          {error}{' '}
+          <button type="button" onClick={dismiss}>
+            OK
+          </button>
+        </p>
+      ) : null}
+
+      <main>
+        {view === null ? (
+          <Home
+            initialCode={initialCode}
+            error={error}
+            onCreate={(name) => {
+              send('createRoom', { name })
+            }}
+            onJoin={(code, name) => {
+              send('joinRoom', { code, name })
+            }}
+          />
+        ) : view.phase === 'lobby' ? (
+          <Lobby
+            view={view}
+            onConfigure={(patch: Partial<TableConfig>) => {
+              send('configureTable', patch)
+            }}
+            onStart={() => {
+              send('startGame', {})
+            }}
+            onLeave={leave}
+          />
+        ) : null}
+      </main>
     </div>
   )
 }

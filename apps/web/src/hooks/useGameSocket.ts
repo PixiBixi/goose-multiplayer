@@ -3,7 +3,7 @@ import type { ClientEvent, TableView } from '@goose/protocol'
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { t } from '../i18n/index.js'
-import { sessionToken } from '../lib/session.js'
+import { rememberedTable, rememberTable, sessionToken } from '../lib/session.js'
 import { initialState, reduce, type Status } from './game-reducer.js'
 
 /** The payload a client action carries, taken from the schema that guards it. */
@@ -61,9 +61,10 @@ export function useGameSocket(): GameSocket {
 
     connection.on('connect', () => {
       dispatch({ type: 'status', status: 'open' })
-      const table = seated.current
-      /* The session token is what makes this land back on the same seat
-         instead of seating a stranger, or burning the whole grace period. */
+      /* On a reconnect the ref still knows the table; after a reload only
+         storage does. The session token is what makes either land back on the
+         same seat instead of seating a stranger or burning the whole grace. */
+      const table = seated.current ?? rememberedTable()
       if (table !== null) {
         emit(connection, 'joinRoom', { ...table, session: sessionToken() })
       }
@@ -76,9 +77,16 @@ export function useGameSocket(): GameSocket {
     })
     connection.on('tableView', (view: TableView) => {
       seated.current = { code: view.code, name: view.you.name }
+      rememberTable(seated.current)
       dispatch({ type: 'view', view })
     })
     connection.on('error', (error: ServerError) => {
+      /* A refused rejoin means the table is gone. Forget it, or every reload
+         from now on lands on the same refusal. */
+      if (error.code === 'join_failed') {
+        seated.current = null
+        rememberTable(null)
+      }
       dispatch({ type: 'error', error: messageFor(error) })
     })
 
@@ -116,6 +124,7 @@ export function useGameSocket(): GameSocket {
 
   const forget = useCallback(() => {
     seated.current = null
+    rememberTable(null)
     dispatch({ type: 'left' })
   }, [])
 

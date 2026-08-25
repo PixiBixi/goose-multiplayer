@@ -53,11 +53,42 @@ export function sessionToken(): string {
   return token
 }
 
+/* The table this tab was last seated at. The session token alone recovers a
+   dropped socket, because the tab still remembers where it was sitting; a
+   reload forgets that, and the seat would wait out the grace period and be
+   lost even though the token was right there. */
+const TABLE_KEY = 'goose.table'
+
+export type RememberedTable = { code: string; name: string }
+
+export function rememberTable(table: RememberedTable | null): void {
+  try {
+    if (table === null) window.localStorage.removeItem(TABLE_KEY)
+    else window.localStorage.setItem(TABLE_KEY, JSON.stringify(table))
+  } catch {
+    /* No storage means no reload recovery, and nothing worse than that. */
+  }
+}
+
+export function rememberedTable(): RememberedTable | null {
+  try {
+    const raw = window.localStorage.getItem(TABLE_KEY)
+    if (raw === null) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    const { code, name } = parsed as Partial<RememberedTable>
+    return typeof code === 'string' && typeof name === 'string' ? { code, name } : null
+  } catch {
+    return null
+  }
+}
+
 /** Only for the tests: drops the token so the next call mints a fresh one. */
 export function forgetSession(): void {
   inMemory = null
   try {
     window.localStorage.removeItem(KEY)
+    window.localStorage.removeItem(TABLE_KEY)
   } catch {
     /* Nothing to remove when storage never worked. */
   }

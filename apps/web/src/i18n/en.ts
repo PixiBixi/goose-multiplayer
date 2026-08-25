@@ -116,8 +116,8 @@ export const en = {
   'step.dice': 'The Dice: on to square {to}.',
   'step.maze': 'The Maze: back to square {to}.',
   'step.death': 'Death: back to square {to}.',
-  'step.blockedWell': '{name} falls into the Well and waits for a rescuer.',
-  'step.blockedPrison': '{name} walks into the Prison and waits for a rescuer.',
+  'step.blockedWell': '{name} falls into the Well, square {at}.',
+  'step.blockedPrison': '{name} lands in the Prison, square {at}.',
   'step.rescue': '{name} is freed from square {at} and starts again from square {to}.',
   'step.freedWell': '{name} has served the time: the Well lets go after {waited} turns.',
   'step.freedPrison': '{name} has served the sentence: the Prison lets go after {waited} turns.',
@@ -153,7 +153,7 @@ export const en = {
     'The Inn costs a turn, not a square: you do not go backwards, you wait, and it is the only trap on the board paid for in time.',
   'card.well.name': 'The Well',
   'card.well.why':
-    'The Well keeps whoever falls in until somebody else takes their place: it is the trap nobody climbs out of alone.',
+    'The Well does not send you back, it holds you: the pawn keeps its square and pays in turns. Which doors are open is up to the table, and the seat plate always says how much is left to sit out.',
   'card.prison.name': 'The Prison',
   'card.prison.why':
     'The Prison holds you like the Well, but eleven squares from the Garden: landing there so close to the end is the dearest punishment on the board.',

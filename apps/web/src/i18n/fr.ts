@@ -116,8 +116,8 @@ export const fr = {
   'step.dice': 'Les Dés : direction la case {to}.',
   'step.maze': 'Le Labyrinthe : retour en case {to}.',
   'step.death': 'La Mort : retour en case {to}.',
-  'step.blockedWell': '{name} tombe dans le Puits et attend un sauveteur.',
-  'step.blockedPrison': '{name} entre en Prison et attend un sauveteur.',
+  'step.blockedWell': '{name} tombe dans le Puits, case {at}.',
+  'step.blockedPrison': '{name} entre en Prison, case {at}.',
   'step.rescue': '{name} est libéré de la case {at} et repart en case {to}.',
   'step.freedWell': '{name} a fait son temps : le Puits le relâche après {waited} tours.',
   'step.freedPrison': '{name} a purgé sa peine : la Prison le relâche après {waited} tours.',
@@ -153,7 +153,7 @@ export const fr = {
     "L'Auberge coûte un tour et pas une case : on ne recule pas, on attend, et c'est le seul piège du plateau qui se paie en temps.",
   'card.well.name': 'Le Puits',
   'card.well.why':
-    "Le Puits garde son joueur tant qu'un autre ne vient pas prendre sa place : c'est le piège dont on ne sort jamais tout seul.",
+    'Le Puits ne fait pas reculer, il retient : le pion garde sa case et paie en tours. Les portes de sortie sont réglées par la table, et la plaque du siège dit toujours combien il reste à tenir.',
   'card.prison.name': 'La Prison',
   'card.prison.why':
     "La Prison bloque comme le Puits, mais à onze cases du Jardin : y tomber si près de l'arrivée est la punition la plus chère du plateau.",

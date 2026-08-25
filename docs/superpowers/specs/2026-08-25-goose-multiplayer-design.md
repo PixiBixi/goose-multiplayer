@@ -119,7 +119,9 @@ Configurables par l'hôte, avant le premier lancer uniquement.
 | --- | --- | --- |
 | `exactFinish` | activée | Il faut tomber pile sur 63. Le surplus fait rebondir en arrière. Désactivée, on gagne dès qu'on atteint ou dépasse 63. |
 | `twoDice` | activée | Deux dés à six faces. Désactivée, un seul dé et la partie dure environ deux fois plus longtemps. |
-| `rescue` | activée | Un joueur bloqué au puits ou en prison est libéré quand un autre arrive sur la case et prend sa place. Désactivée, il y reste jusqu'à la fin de la manche. |
+| `rescue` | activée | La première des trois portes du puits et de la prison : un autre joueur arrive sur la case, prend la place et libère celui qui y était. C'est la seule qui déplace deux pions d'un coup. Désactivée, il reste le double et le plafond. |
+| `maxBlockedTurns` | `3` | La deuxième porte : au bout de ce nombre de **ses propres tours**, le siège bloqué est relâché, le compteur est remis à zéro et il rejoue normalement. Un essai raté et un tour passé coûtent le même tour. `null` rétablit la règle historique, sauvetage uniquement, et c'est le seul réglage où la manche peut encore se terminer sans vainqueur. |
+| `escapeOnDouble` | activée | La troisième porte, et la seule que le joueur ouvre lui-même : **un siège bloqué prend son tour et lance les dés** au lieu d'être sauté. Un double le libère et le fait avancer du même lancer, chaîne comprise. Ce double-là ne redonne PAS la main, contrairement à `doubleAgain` : la sortie est déjà payée. Un lancer raté dépense un tour et la main passe. N'a de sens qu'avec `twoDice` : sans double possible, le siège est sauté plutôt que de lancer pour rien. L'interface la désactive et la grise quand `twoDice` est décochée. |
 | `opening9` | activée | Un 9 lancé **depuis la case de départ** envoie directement en 26 si les dés font 6+3, en 53 si 5+4. Activée par défaut parce que sans elle un 9 depuis la case 0 enchaîne les oies 9, 18, 27, 36, 45, 54 puis 63 et gagne la partie d'emblée. La règle tient à la géométrie, pas au compteur de tours : elle s'applique à tout siège posé sur la case 0, y compris celui que `tripleDouble: 'restart'` y a renvoyé en cours de partie. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
 | `doubleAgain` | activée | Un double aux deux dés redonne la main au même siège au lieu de passer le tour. Aucune relance si le siège finit sa résolution bloqué (puits, prison), en attente (auberge) ou vainqueur. Trois doubles consécutifs au maximum. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
 | `tripleDouble` | `'pass'` | Ce que coûte le **troisième** double consécutif. `'pass'` : le tour passe au siège suivant, les gains des deux lancers précédents restent acquis. `'restart'` : le siège repart du départ, case 0, hors du plateau, puis le tour passe. Plus sévère que La Mort en 58, qui ne renvoie qu'en case 1 : c'est un choix assumé. Le siège revenu en case 0 retombe sous `opening9`, qui l'empêche de gagner d'emblée sur un 9. Grisée quand `doubleAgain` ou `twoDice` est décochée. |
@@ -127,21 +129,36 @@ Configurables par l'hôte, avant le premier lancer uniquement.
 
 La règle des doubles est une règle maison : ni le plateau imprimé ni aucune édition connue ne la contient, les relances du jeu de l'oie viennent des cases oie. Le plafond à trois existe pour qu'un siège chanceux ne puisse pas garder la table indéfiniment, et parce que le moteur a une preuve de terminaison qu'aucune règle ajoutée ne doit rouvrir.
 
+**Pourquoi trois portes et non plus une seule.** Le sauvetage seul demandait qu'un autre siège tombe pile sur la même case parmi 63. Mesuré sur 2000 parties par format contre le moteur compilé (`scripts/measure-blocking.ts`) : 56 % des parties à deux joueurs, 67 % à quatre et 73 % à six comptaient un siège bloqué, et **exactement les mêmes pourcentages se terminaient avec ce siège encore bloqué**. Autrement dit, tomber dans le puits ou en prison n'était pas un revers, c'était une élimination, et à deux joueurs cela retirait la moitié de la table. Le plafond ramène ce chiffre à 8,9 % / 24 % / 39,4 % et borne le pire cas à 3 tours au lieu de 81. Le double libérateur, lui, répond à l'autre moitié de la plainte : le joueur bloqué n'avait rien à faire. Il ouvre entre 34 % et 40 % des sorties selon le format, donc il pèse réellement dans le jeu. **Ne pas « simplifier » ces règles en revenant au sauvetage seul sans avoir relancé cette mesure.**
+
 ### Blocages, attente et ordre du tour
 
 - Le blocage vit dans l'état, pas dans un timer : `blocked: Record<Seat, 'well' | 'prison' | null>`.
-- L'attente aussi : `skipTurns: Record<Seat, number>`, décrémenté quand le tour
-  passe sur le siège.
-- Un siège bloqué ou en attente est sauté. La délivrance est un effet de
-  l'arrivée d'un autre joueur sur la case, donc un cas du reducer, testable sans
-  horloge.
+- Le temps déjà passé au trou aussi : `blockedTurns: Record<Seat, number>`,
+  compté en tours du siège lui-même et remis à zéro dès qu'il en sort, par
+  n'importe laquelle des trois portes. Dans l'état, donc il survit à une
+  reconnexion et se rejoue à l'identique.
+- L'attente est un troisième compteur, à ne pas confondre avec les deux
+  précédents : `skipTurns: Record<Seat, number>`, décrémenté quand le tour passe
+  sur le siège. **L'auberge fait attendre, elle ne bloque pas** : un siège à
+  l'auberge n'accumule aucun tour de blocage.
+- Un siège en attente est sauté. Un siège bloqué prend son tour dès que
+  `escapeOnDouble` et `twoDice` sont actives, et il est sauté sinon. Dans les
+  deux cas le tour compte contre `maxBlockedTurns`.
+- Les trois délivrances sont des cas du reducer, testables sans horloge, et
+  chacune a son étape sur le fil : `rescue`, `freed` (avec le nombre de tours
+  attendus) et `escape`. Un essai manqué émet `escapeFailed`, sans quoi le tour
+  se lirait comme un tour sauté et le joueur ne verrait pas qu'il a joué.
 - Plusieurs pions peuvent occuper la même case. Il n'y a pas de capture, à
   l'exception de la délivrance du puits et de la prison.
-- **Cas limite à traiter explicitement** : avec `rescue` désactivée, si tous les
-  sièges encore en jeu sont bloqués, la manche se termine sans vainqueur et le
-  classement se lit sur les positions. C'est le seul état de partie où personne
-  ne peut plus agir, et le reducer doit le détecter plutôt que de laisser la
-  table figée.
+- **Cas limite à traiter explicitement** : avec `rescue` désactivée, `escapeOnDouble`
+  désactivée et `maxBlockedTurns: null`, si tous les sièges encore en jeu sont
+  bloqués, la manche se termine sans vainqueur et le classement se lit sur les
+  positions. C'est le seul état de partie où personne ne peut plus agir, et le
+  reducer doit le détecter plutôt que de laisser la table figée. Avec un plafond
+  fini, ce cas ne peut plus se produire : chaque tour de table fait monter le
+  compteur de chaque siège bloqué, donc quelqu'un ressort. Le chemin reste dans
+  le moteur et dans les tests pour la configuration `null`.
 
 ---
 

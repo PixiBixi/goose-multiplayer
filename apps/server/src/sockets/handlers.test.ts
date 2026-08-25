@@ -67,6 +67,25 @@ describe('handlers', () => {
     )
   })
 
+  /* The handler is the piece that gets forgotten, and a rule whose "off" is
+     `null` is the one it drops: the configure handler strips undefined keys
+     before handing them to the room, and null must survive that. */
+  it('carries the whole trap configuration through to the room', () => {
+    const { manager, connect } = table()
+    const host = fakeSocket('a')
+    connect(host)
+    fire(host, 'createRoom', { name: 'Jérémy', session: 'token-host' })
+    const code = lastView(host).code
+
+    fire(host, 'configureTable', { maxBlockedTurns: null, escapeOnDouble: false })
+    const config = manager.get(code)?.view(0).config
+    expect(config?.maxBlockedTurns).toBeNull()
+    expect(config?.escapeOnDouble).toBe(false)
+
+    fire(host, 'configureTable', { maxBlockedTurns: 2 })
+    expect(manager.get(code)?.view(0).config.maxBlockedTurns).toBe(2)
+  })
+
   it('refuses playCard while the table runs in classic mode', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }

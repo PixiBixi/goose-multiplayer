@@ -47,6 +47,50 @@ describe('buildView', () => {
     expect(view.turn.legalMoves).toEqual(['roll'])
   })
 
+  it('counts down the turns a blocked seat has left, so no plate has to', () => {
+    const game = { ...createGame(2), blocked: ['well' as const, null], blockedTurns: [1, 0] }
+    const view = buildView(
+      {
+        code: 'ABCDEF',
+        phase: 'playing',
+        config: game.config,
+        hostSeat: 0,
+        members,
+        game,
+        lastTurn: null,
+        chat: [],
+      },
+      0,
+    )
+    expect(view.seats[0]?.blockedTurnsLeft).toBe(2)
+    /* Trying, not waiting: the default table hands the blocked seat its roll. */
+    expect(view.seats[0]?.blockedTrying).toBe(true)
+    expect(view.seats[1]?.blockedTurnsLeft).toBeNull()
+    expect(view.seats[1]?.blockedTrying).toBe(false)
+  })
+
+  it('counts down nothing at a table where only a rescue opens the trap', () => {
+    const game = {
+      ...createGame(2, { maxBlockedTurns: null, escapeOnDouble: false }),
+      blocked: ['well' as const, null],
+    }
+    const view = buildView(
+      {
+        code: 'ABCDEF',
+        phase: 'playing',
+        config: game.config,
+        hostSeat: 0,
+        members,
+        game,
+        lastTurn: null,
+        chat: [],
+      },
+      0,
+    )
+    expect(view.seats[0]?.blockedTurnsLeft).toBeNull()
+    expect(view.seats[0]?.blockedTrying).toBe(false)
+  })
+
   it('offers no legal move to a seat that is not on turn', () => {
     const game = createGame(2, DEFAULT_CONFIG)
     const view = buildView(

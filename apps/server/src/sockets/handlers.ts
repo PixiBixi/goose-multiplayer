@@ -15,6 +15,21 @@ type SessionData = {
    the size of MAX_SEATS still leaves each seat its own budget. */
 const RATE_LIMIT = { windowMs: 10_000, max: 30 }
 
+/* A returning player carries the token they were first seated with, so the
+   manager can hand the seat straight back. RoomManager.reconnect existed and
+   was tested from the day it was written, and nothing called it: a client
+   action needs four things, and the handler is the one that gets forgotten.
+   An unrecognised token is simply somebody new. */
+function takeSeat(manager: RoomManager, code: string, name: string, session: string): number {
+  try {
+    return manager.reconnect(code, session)
+  } catch {
+    /* A code that matches no room throws again from join, with the same
+       message, so this catch never hides a missing room. */
+    return manager.join(code, name, session)
+  }
+}
+
 function emitError(socket: Socket, code: string, message: string): void {
   socket.emit('error', { code, message })
 }
@@ -37,8 +52,6 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
   const allow = makeRateLimiter({ ...RATE_LIMIT, clock: systemClock() })
 
   io.on('connection', (socket: Socket) => {
-    const sessionId = socket.id
-
     const guard = (): boolean => {
       if (allow(socket.id)) return true
       emitError(socket, 'rate_limited', 'too many actions, slow down')
@@ -70,7 +83,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
         return
       }
       run('create', () => {
-        const code = manager.create(parsed.data.name, sessionId)
+        const code = manager.create(parsed.data.name, parsed.data.session)
         socket.data = { code, seat: 0 }
         socket.join(code)
         publish(socket, manager, code)
@@ -85,8 +98,8 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
         return
       }
       run('join', () => {
-        const { code, name } = parsed.data
-        const seat = manager.join(code, name, sessionId)
+        const { code, name, session } = parsed.data
+        const seat = takeSeat(manager, code, name, session)
         socket.data = { code, seat }
         socket.join(code)
         publish(socket, manager, code)

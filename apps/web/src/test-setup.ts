@@ -72,6 +72,30 @@ export function resizeTo(width: number): void {
 
 globalThis.ResizeObserver = StubResizeObserver
 
+/* Node 26 exposes a global `localStorage` that needs --localstorage-file, and
+   it shadows the one jsdom would otherwise install. The session token has to
+   be persisted for its test to mean anything, so put a real Storage back. */
+if (typeof window !== 'undefined' && !window.localStorage) {
+  const entries = new Map<string, string>()
+  const storage: Storage = {
+    get length() {
+      return entries.size
+    },
+    key: (index: number) => [...entries.keys()][index] ?? null,
+    getItem: (key: string) => entries.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      entries.set(key, String(value))
+    },
+    removeItem: (key: string) => {
+      entries.delete(key)
+    },
+    clear: () => {
+      entries.clear()
+    },
+  }
+  Object.defineProperty(window, 'localStorage', { value: storage, configurable: true })
+}
+
 afterEach(() => {
   cleanup()
   vi.useRealTimers()

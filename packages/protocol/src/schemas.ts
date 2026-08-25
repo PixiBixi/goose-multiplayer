@@ -6,10 +6,15 @@ const code = z
   .trim()
   .toUpperCase()
   .regex(/^[A-Z0-9]{6}$/)
+/* The client mints this once and keeps it in localStorage. It is what lets a
+   dropped player land back on their own seat instead of burning the grace
+   period, so it travels with every way of sitting down at a table. Capped
+   because it is a client-supplied map key the server holds per room. */
+const session = z.string().trim().min(1).max(64)
 
 export const clientSchemas = {
-  createRoom: z.object({ name }),
-  joinRoom: z.object({ code, name }),
+  createRoom: z.object({ name, session }),
+  joinRoom: z.object({ code, name, session }),
   /* mode is deliberately absent: v1 refuses the card variant, and letting the
      schema accept it would push the refusal into the handler where it is
      easier to forget. */

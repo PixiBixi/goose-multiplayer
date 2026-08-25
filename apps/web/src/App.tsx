@@ -8,7 +8,7 @@ import { Home } from './screens/Home.js'
 import { Lobby } from './screens/Lobby.js'
 
 export function App(): JSX.Element {
-  const { view, status, error, send, dismiss, forget } = useGameSocket()
+  const { view, status, error, send, create, join, dismiss, forget } = useGameSocket()
   const initialCode = useMemo(() => codeFromSearch(window.location.search) ?? '', [])
 
   /* Keeps the address bar in step with the table, so a refresh or a shared
@@ -44,16 +44,7 @@ export function App(): JSX.Element {
 
       <main>
         {view === null ? (
-          <Home
-            initialCode={initialCode}
-            error={error}
-            onCreate={(name) => {
-              send('createRoom', { name })
-            }}
-            onJoin={(code, name) => {
-              send('joinRoom', { code, name })
-            }}
-          />
+          <Home initialCode={initialCode} error={error} onCreate={create} onJoin={join} />
         ) : view.phase === 'lobby' ? (
           <Lobby
             view={view}

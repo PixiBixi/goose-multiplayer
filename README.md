@@ -43,6 +43,31 @@ roulent 900 ms puis se posent sur le résultat, et le pion marche la chaîne
 connaît le résultat avant l'animation ; le client le retient jusqu'à ce que les
 dés se posent. `prefers-reduced-motion: reduce` affiche tout d'un coup.
 
+Chaque règle qui se déclenche porte son propre type d'étape dans le moteur :
+le neuf d'ouverture, le pont, les dés, l'auberge, le puits, la prison, le
+labyrinthe, la mort, les oies, le rebond sur 63, le sauvetage, le double, le
+troisième double, le jardin, l'arrivée libre et la table bloquée. Une règle que
+le client devrait deviner en comparant deux cases est une règle que le joueur
+devine aussi, donc le moteur la nomme. `STEP_KINDS`, dans `@goose/protocol`,
+tient la liste des deux côtés du fil : une règle ajoutée au moteur et oubliée
+là casse la compilation.
+
+Quand une règle se déclenche, une fiche apparaît **à côté** du plateau, jamais
+par-dessus : l'icône de la case, le nom de la règle et une phrase qui dit
+pourquoi la règle existe, pas ce qu'elle vient de faire. Elle s'efface au bout
+de trois secondes ou au clic, et plusieurs règles dans une même chaîne
+s'enfilent au lieu de s'empiler. Le bouton de lancer reste baissé tant qu'une
+fiche est à l'écran, pour qu'un tour ne soit pas doublé par le suivant. Sous
+`prefers-reduced-motion: reduce`, la fiche n'a pas de minuteur et ne retient
+rien : elle attend le clic.
+
+Les téléports volent la spirale au lieu de sauter d'une case à l'autre : le
+pion suit le tracé imprimé en 1,2 s quelle que soit la distance, en laissant
+une traînée derrière lui. Six cases depuis le pont ou cinquante-trois depuis
+le neuf d'ouverture prennent le même temps, donc la table n'attend jamais. Les
+deux rendus le font, la spirale comme le serpentin en grille. Sous
+`prefers-reduced-motion: reduce`, le pion est directement à l'arrivée.
+
 ## Docker
 
 L'image sert l'API, les WebSockets et le bundle du client sur un seul port.

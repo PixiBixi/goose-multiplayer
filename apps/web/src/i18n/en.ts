@@ -4,6 +4,12 @@ export const en = {
   'app.title': 'The Game of the Goose',
   'app.tagline': 'Sixty-three squares, two dice, and a great deal of bad faith.',
 
+  'update.title': 'A new version is live.',
+  'update.text':
+    'This tab is still running the previous one: reload when the game gives you a moment, or some rules may stop showing anything.',
+  'update.reload': 'Reload',
+  'update.later': 'Later',
+
   'status.connecting': 'Connecting',
   'status.open': 'Connected',
   'status.closed': 'Connection lost, retrying',

@@ -4,6 +4,12 @@ export const fr = {
   'app.title': "Le Jeu de l'Oie",
   'app.tagline': 'Soixante-trois cases, deux dés, et beaucoup de mauvaise foi.',
 
+  'update.title': 'Nouvelle version en ligne.',
+  'update.text':
+    'Cet onglet tourne encore sur la précédente : recharge la page quand la partie te le permet, sinon certaines règles risquent de ne plus rien afficher.',
+  'update.reload': 'Recharger',
+  'update.later': 'Plus tard',
+
   'status.connecting': 'Connexion en cours',
   'status.open': 'Connecté',
   'status.closed': 'Connexion perdue, nouvelle tentative',

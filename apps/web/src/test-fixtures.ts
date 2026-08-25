@@ -21,6 +21,7 @@ export function makeSeat(seat: number, patch: Partial<SeatView> = {}): SeatView 
 export function makeView(patch: Partial<TableView> = {}): TableView {
   const seats = patch.seats ?? [makeSeat(0), makeSeat(1)]
   return {
+    version: 'v0.0.0-test',
     code: 'HKD4P2',
     phase: 'lobby',
     config: { ...DEFAULT_CONFIG },

@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
+import { appVersion } from './scripts/app-version.js'
 
 export default defineConfig({
   test: {
@@ -27,6 +28,10 @@ export default defineConfig({
       },
       {
         plugins: [react()],
+        /* The same define apps/web/vite.config.ts sets: the client reads
+           __APP_VERSION__ at module scope, so a suite without it would throw
+           on the reference rather than test anything. */
+        define: { __APP_VERSION__: JSON.stringify(appVersion()) },
         test: {
           name: 'web',
           environment: 'jsdom',

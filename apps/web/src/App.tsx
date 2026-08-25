@@ -1,6 +1,7 @@
 import type { TableConfig } from '@goose/engine'
 import type { JSX } from 'react'
 import { useEffect, useMemo } from 'react'
+import { UpdateBanner } from './components/UpdateBanner.js'
 import { useGameSocket } from './hooks/useGameSocket.js'
 import { t } from './i18n/index.js'
 import { codeFromSearch, rememberRoom } from './lib/room-url.js'
@@ -33,6 +34,11 @@ export function App(): JSX.Element {
           {t(`status.${status}`)}
         </span>
       </header>
+
+      {/* Above the error banner and below the masthead: it is not an error and
+          it never interrupts the game, but a player whose tab has gone stale
+          should read it before wondering why a rule showed nothing. */}
+      {view !== null ? <UpdateBanner built={__APP_VERSION__} running={view.version} /> : null}
 
       {view !== null && error !== null ? (
         <p className="alert" role="alert">

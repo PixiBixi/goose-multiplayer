@@ -2,6 +2,22 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.5.0](https://github.com/PixiBixi/goose-multiplayer/compare/29bb99a198148f6bebc6a38e93bdea00ae395068..v0.5.0) - 2026-08-25
+#### Features
+- (**engine**) three doors out of the well and the prison - ([29bb99a](https://github.com/PixiBixi/goose-multiplayer/commit/29bb99a198148f6bebc6a38e93bdea00ae395068)) - Jeremy Delgado
+- (**protocol**) carry the trap rules and the three exits on the wire - ([8da1ff9](https://github.com/PixiBixi/goose-multiplayer/commit/8da1ff9f27d7324255c387ee4b68fc53b405cde7)) - Jeremy Delgado
+- (**server**) project what a blocked seat can still do - ([ae0b2ee](https://github.com/PixiBixi/goose-multiplayer/commit/ae0b2eecda93856d0c18a1f93a6419debe1afbe2)) - Jeremy Delgado
+- (**web**) count the trap down on the seat plate, and card the way out - ([9f4c2bd](https://github.com/PixiBixi/goose-multiplayer/commit/9f4c2bdd4984e626aef976aa4cd3383aa2a7fe06)) - Jeremy Delgado
+#### Bug Fixes
+- (**web**) stop promising a rescuer that is no longer the only way out - ([cd30ebb](https://github.com/PixiBixi/goose-multiplayer/commit/cd30ebb54b69985379e01cf66dcd3c33bb329bf8)) - Jeremy Delgado
+#### Documentation
+- (**readme**) describe the three ways out and the countdown - ([6abc556](https://github.com/PixiBixi/goose-multiplayer/commit/6abc55696f7e6c57b5e5be60be8bf71964cffd52)) - Jeremy Delgado
+- (**spec**) record why the trap has three doors and not one - ([9cb15d8](https://github.com/PixiBixi/goose-multiplayer/commit/9cb15d8557b8362fd1cf71061f5ab0b09ee86ade)) - Jeremy Delgado
+#### Tests
+- (**scripts**) measure how long a seat stays stuck in the trap - ([3406407](https://github.com/PixiBixi/goose-multiplayer/commit/340640710fda2e832b5e59c19bcd0a77c0d312dc)) - Jeremy Delgado
+
+- - -
+
 ## [v0.4.0](https://github.com/PixiBixi/goose-multiplayer/compare/040ddda18ba82f44279e1d18d2ee9ac339fa28e1..v0.4.0) - 2026-08-25
 #### Features
 - (**engine**) give every rule that fires a step of its own - ([040ddda](https://github.com/PixiBixi/goose-multiplayer/commit/040ddda18ba82f44279e1d18d2ee9ac339fa28e1)) - Jeremy Delgado

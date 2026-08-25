@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.3.0](https://github.com/PixiBixi/goose-multiplayer/compare/ed18fff35eb8558c446e44d4d18a04ce2c585599..v0.3.0) - 2026-08-25
+#### Features
+- (**engine**) grant another roll on a double, capped at three - ([ed18fff](https://github.com/PixiBixi/goose-multiplayer/commit/ed18fff35eb8558c446e44d4d18a04ce2c585599)) - Jeremy Delgado
+- (**protocol,server**) carry the doubles rule on the wire and off the timer - ([da5bd31](https://github.com/PixiBixi/goose-multiplayer/commit/da5bd317f4383cd3f8afbdee291af81cc26ebfc7)) - Jeremy Delgado
+- (**web**) idle dice, a tumble that lands, and a pawn that walks - ([3cfa1da](https://github.com/PixiBixi/goose-multiplayer/commit/3cfa1da73b6f9d30afe29ff5d358d81b8d14f5f3)) - Jeremy Delgado
+#### Bug Fixes
+- (**engine**) key the opening nine on the start square, not on the first roll - ([320317b](https://github.com/PixiBixi/goose-multiplayer/commit/320317ba5c4b3fa87afd27c2878ba80d147c7aee)) - Jeremy Delgado
+- (**web**) hold the turn on screen until the chain has played - ([377e648](https://github.com/PixiBixi/goose-multiplayer/commit/377e64838e815590c494f28e90bfcbb6c4de9c5a)) - Jeremy Delgado
+#### Tests
+- (**e2e**) pace the suite off the roll button, not off a stopwatch - ([8bad53e](https://github.com/PixiBixi/goose-multiplayer/commit/8bad53ed57a6e67230ed414c08d00a64437d9e28)) - Jeremy Delgado
+
+- - -
+
 ## [v0.2.1](https://github.com/PixiBixi/goose-multiplayer/compare/c1e7d408d1a18720b8a424bf213fd2bba0b1b533..v0.2.1) - 2026-08-25
 #### Bug Fixes
 - (**format**) let cog own the changelog - ([7497efb](https://github.com/PixiBixi/goose-multiplayer/commit/7497efb6757bac05aef2f06aa3e8423f25f3d053)) - Jeremy Delgado

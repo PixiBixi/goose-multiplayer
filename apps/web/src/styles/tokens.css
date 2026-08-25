@@ -1,0 +1,54 @@
+/* Risograph direction, chosen over three others recorded on the design canvas.
+   design/build.mjs is the source of truth for these values: flat inks that
+   overprint rather than blend, so the board reads at 46px per square on a
+   phone and at 600px on a projector.
+
+   The three faces come from the stylesheet link in index.html, never from a
+   local face declaration: one pointing at a file that is not there falls back
+   silently, which is worse than having no face at all. Every family below
+   keeps a real fallback stack. Never use a ui-* generic either: one
+   unsupported generic invalidates the whole declaration, and tokens.test.ts
+   fails the build over it. */
+:root {
+  --ink: #1b2a4a;
+  --paper: #f0e9d8;
+  --paper-raised: #faf5e8;
+  --dim: #5b6a86;
+
+  --pink: #ff4f7b;
+  --teal: #1fb3a6;
+  --ochre: #f2a03d;
+  --blue: #5b7cff;
+  --gold: #ffd93d;
+
+  --square-plain: var(--paper-raised);
+  --square-goose: var(--teal);
+  --square-move: var(--blue);
+  --square-trap: var(--ochre);
+  --square-death: var(--pink);
+  --square-garden: var(--gold);
+
+  --on-plain: #1b2a4a;
+  --on-goose: #0a2320;
+  --on-move: #f6f2e6;
+  --on-trap: #2a1c06;
+  --on-death: #2a0713;
+  --on-garden: #1b2a4a;
+
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.3rem;
+  --step-2: 1.85rem;
+  --step-3: 2.6rem;
+
+  --display: 'Archivo Black', 'Helvetica Neue', Impact, sans-serif;
+  --body: 'Archivo', 'Helvetica Neue', Helvetica, sans-serif;
+  --data: 'Space Mono', SFMono-Regular, Menlo, monospace;
+
+  --border: 2px solid var(--ink);
+  --shadow-hard: 6px 6px 0 var(--ink);
+  --shadow-soft: 3px 3px 0 var(--ink);
+
+  /* Every control is at least this tall: a thumb is not a mouse pointer. */
+  --touch: 44px;
+}

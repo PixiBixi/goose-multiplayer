@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG, createGame } from '@goose/engine'
 import { describe, expect, it } from 'vitest'
+import { APP_VERSION } from './version.js'
 import { buildView } from './views.js'
 
 const members = [
@@ -143,5 +144,26 @@ describe('buildView', () => {
         5,
       ),
     ).toThrow()
+  })
+
+  /* The tab on the other end compares this with the version its own bundle was
+     built as. Every view carries it, not just the first: a tab that reconnects
+     into a room after a deploy has to be told too. */
+  it('stamps the version the server is running into the view', () => {
+    const view = buildView(
+      {
+        code: 'ABCDEF',
+        phase: 'lobby',
+        config: DEFAULT_CONFIG,
+        hostSeat: 0,
+        members,
+        game: null,
+        lastTurn: null,
+        chat: [],
+      },
+      0,
+    )
+    expect(view.version).toBe(APP_VERSION)
+    expect(view.version.length).toBeGreaterThan(0)
   })
 })

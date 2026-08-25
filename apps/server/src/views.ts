@@ -1,6 +1,7 @@
 import { canAttemptEscape, legalMoves, ranking as computeRanking } from '@goose/engine'
 import type { GameState, Seat, Step, TableConfig } from '@goose/engine'
 import type { ChatLine, Presence, SeatView, TableView } from '@goose/protocol'
+import { APP_VERSION } from './version.js'
 
 export type Member = {
   name: string
@@ -55,6 +56,10 @@ export function buildView(input: ViewInput, forSeat: Seat): TableView {
   }))
 
   return {
+    /* Read once at boot, not per view: it cannot change while this process
+       lives, and the tab on the other end needs it in every message to notice
+       the day the process on this end is a different one. */
+    version: APP_VERSION,
     code,
     phase,
     config,

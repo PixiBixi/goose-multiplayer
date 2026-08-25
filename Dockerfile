@@ -18,6 +18,12 @@ COPY apps/web/package.json apps/web/
 RUN npm ci
 
 COPY tsconfig.base.json tsconfig.json tsconfig.build.json ./
+# The changelog is the only file carrying a version number: `cog bump` writes
+# it, the client build bakes it in and the server reads it at boot to stamp
+# every view. Without it both sides report 'dev' and the client can never tell
+# a player their tab has been left open across a deploy.
+COPY CHANGELOG.md ./
+COPY scripts scripts
 COPY packages packages
 COPY apps apps
 
@@ -52,6 +58,8 @@ COPY --from=build --chown=node:node /app/apps/server/package.json ./apps/server/
 COPY --from=build --chown=node:node /app/apps/web/dist ./apps/web/dist
 COPY --from=build --chown=node:node /app/apps/web/package.json ./apps/web/
 COPY --from=build --chown=node:node /app/package.json ./
+# Read at boot by apps/server/src/version.ts, three levels above its dist/.
+COPY --from=build --chown=node:node /app/CHANGELOG.md ./
 
 USER node
 EXPOSE 5050

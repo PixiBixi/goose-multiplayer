@@ -29,7 +29,7 @@ describe('applyRoll, blocking and waiting', () => {
     expect(state.blocked[1]).toBe('well')
     expect(state.blocked[0]).toBeNull()
     expect(state.positions[0]).toBe(29)
-    expect(steps).toContainEqual({ kind: 'rescue', seat: 0, at: 31, to: 29 })
+    expect(steps).toContainEqual({ kind: 'rescue', seat: 0, at: 31, to: 29, reason: 'well' })
   })
 
   it('does not release anyone when the rescue rule is off', () => {
@@ -42,6 +42,12 @@ describe('applyRoll, blocking and waiting', () => {
     expect(state.blocked[0]).toBe('well')
     expect(state.blocked[1]).toBe('well')
     expect(steps.some((s) => s.kind === 'rescue')).toBe(false)
+  })
+
+  it('says which trap a rescue opened, so the client never looks the square up', () => {
+    const start = { ...gameAt([52, 50]), blocked: ['prison' as const, null], turn: 1 }
+    const { steps } = applyRoll(start, [1, 1])
+    expect(steps).toContainEqual({ kind: 'rescue', seat: 0, at: 52, to: 50, reason: 'prison' })
   })
 
   it('does not release across different squares', () => {

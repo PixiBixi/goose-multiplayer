@@ -68,7 +68,29 @@ describe('the opening nine', () => {
     // 26 is a dice square. The opening nine places the pawn there, it does not
     // send it on to 53.
     const { state, steps } = applyRoll(opening(), [6, 3])
-    expect(steps).toEqual([{ kind: 'move', from: 0, to: 26, by: 9 }])
+    expect(steps).toEqual([{ kind: 'opening9', from: 0, to: 26, dice: [6, 3] }])
     expect(state.turn).toBe(1)
+  })
+
+  it('names itself instead of passing for an ordinary move', () => {
+    /* The whole point of the dedicated kind. A `move` step from 0 to 53 is
+       indistinguishable from a throw that walked there, and the client has no
+       way back to the rule that fired. Do NOT fold this into `move`. */
+    const { steps } = applyRoll(opening(), [5, 4])
+    expect(steps).toEqual([{ kind: 'opening9', from: 0, to: 53, dice: [5, 4] }])
+  })
+
+  it('carries the dice, because they are what chose the destination', () => {
+    const six = applyRoll(opening(), [3, 6]).steps[0]
+    const five = applyRoll(opening(), [4, 5]).steps[0]
+    expect(six).toEqual({ kind: 'opening9', from: 0, to: 26, dice: [3, 6] })
+    expect(five).toEqual({ kind: 'opening9', from: 0, to: 53, dice: [4, 5] })
+  })
+
+  it('copies the dice rather than holding the array it was handed', () => {
+    const dice = [6, 3]
+    const { steps } = applyRoll(opening(), dice)
+    dice[0] = 1
+    expect(steps[0]).toEqual({ kind: 'opening9', from: 0, to: 26, dice: [6, 3] })
   })
 })

@@ -12,25 +12,34 @@ export const MAX_STEPS = 16
    raise it. */
 export const MAX_CONSECUTIVE_DOUBLES = 3
 
-type Bounce = Extract<Step, { kind: 'bounce' }>
+type Correction = Extract<Step, { kind: 'bounce' | 'overshoot' }>
 
-/* One advance: forward by `by`, rebounding off 63 when exact finish is on.
-   `reached` is the destination the advance points at before the rebound
-   corrects it, so the step that carries it reads like the throw did. */
-type Advance = { landed: Square; reached: Square; bounce: Bounce | null }
+/* One advance: forward by `by`, then whatever 63 does to a throw that goes
+   past it. `reached` is the destination the advance points at before the
+   correction applies, so the step that carries it reads like the throw did,
+   and `correction` names the rule that trimmed it. */
+type Advance = { landed: Square; reached: Square; correction: Correction | null }
 
 function advance(from: Square, by: number, exactFinish: boolean): Advance {
   const raw = from + by
-  if (raw > BOARD_SIZE && exactFinish) {
-    const landed = BOARD_SIZE - (raw - BOARD_SIZE)
+  if (raw > BOARD_SIZE) {
+    const overshoot = raw - BOARD_SIZE
+    /* Two different rules, two different kinds. Clamping silently was the
+       same defect as the opening nine: the move step then reads as an
+       ordinary advance that happens to stop on 63. */
+    const landed = exactFinish ? BOARD_SIZE - overshoot : BOARD_SIZE
     return {
       landed,
       reached: raw,
-      bounce: { kind: 'bounce', from: raw, to: landed, overshoot: raw - BOARD_SIZE },
+      correction: {
+        kind: exactFinish ? 'bounce' : 'overshoot',
+        from: raw,
+        to: landed,
+        overshoot,
+      },
     }
   }
-  const landed = Math.min(raw, BOARD_SIZE)
-  return { landed, reached: landed, bounce: null }
+  return { landed: raw, reached: raw, correction: null }
 }
 
 /* Waiting is spent by being passed over, blocking is not: an inn costs one
@@ -39,7 +48,7 @@ function advance(from: Square, by: number, exactFinish: boolean): Advance {
 
    One function owns the whole rule, including the deadlock, because every
    caller that advances the turn has to agree on when the round is over. */
-function nextTurnAfter(state: GameState, seat: Seat): Seat {
+function nextTurnAfter(state: GameState, seat: Seat, steps: Step[]): Seat {
   for (let hop = 1; hop <= state.seatCount; hop++) {
     const candidate = (seat + hop) % state.seatCount
     if (state.blocked[candidate] !== null) continue
@@ -52,9 +61,11 @@ function nextTurnAfter(state: GameState, seat: Seat): Seat {
 
   /* Nobody can act. With the rescue rule off, seats can be stuck for good, and
      a table that waits for a seat that will never move is worse than a round
-     that ends. */
+     that ends. Said out loud: a round that stops with no winner is a rule of
+     the spec, not a table that gave up. */
   state.finished = true
   state.winner = null
+  steps.push({ kind: 'deadlock' })
   return seat
 }
 
@@ -91,15 +102,16 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
   if (opening !== null) {
     next.positions[seat] = opening
     next.consecutiveDoubles = 0
-    next.turn = nextTurnAfter(next, seat)
-    return { state: next, steps: [{ kind: 'move', from: origin, to: opening, by }] }
+    const opened: Step[] = [{ kind: 'opening9', from: origin, to: opening, dice: [...dice] }]
+    next.turn = nextTurnAfter(next, seat, opened)
+    return { state: next, steps: opened }
   }
   const first = advance(origin, by, next.config.exactFinish)
   const steps: Step[] = [{ kind: 'move', from: origin, to: first.reached, by }]
-  if (first.bounce) steps.push(first.bounce)
+  if (first.correction) steps.push(first.correction)
 
   let square = first.landed
-  let bounced = first.bounce !== null
+  let bounced = first.correction?.kind === 'bounce'
 
   while (true) {
     const effect = effectAt(square)
@@ -113,9 +125,11 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
       }
       const hop = advance(square, by, next.config.exactFinish)
       steps.push({ kind: 'goose', from: square, to: hop.reached, by })
-      if (hop.bounce) {
-        steps.push(hop.bounce)
-        bounced = true
+      if (hop.correction) {
+        steps.push(hop.correction)
+        /* Only a rebound silences the geese. An overshoot lands on 63 and the
+           round is over, so there is nothing left for a goose to relaunch. */
+        bounced ||= hop.correction.kind === 'bounce'
       }
       square = hop.landed
       continue
@@ -145,7 +159,7 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
         if (held >= 0) {
           next.blocked[held] = null
           next.positions[held] = origin
-          steps.push({ kind: 'rescue', seat: held, at: square, to: origin })
+          steps.push({ kind: 'rescue', seat: held, at: square, to: origin, reason: effect.reason })
         }
       }
       next.blocked[seat] = effect.reason
@@ -204,6 +218,6 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
   }
 
   next.consecutiveDoubles = 0
-  next.turn = nextTurnAfter(next, seat)
+  next.turn = nextTurnAfter(next, seat, steps)
   return { state: next, steps }
 }

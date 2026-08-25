@@ -39,14 +39,32 @@ export type GameState = {
 
 export type Move = 'roll'
 
+/* Every rule that changes the game gets its own kind. A rule the client can
+   only recognise by comparing squares, or by reading the table config, is a
+   rule the client cannot name, and an unnamed rule is one the player is left
+   to guess at. Do NOT fold a new rule back into `move`. */
 export type Step =
   | { kind: 'move'; from: Square; to: Square; by: number }
+  /* The opening nine is a placement, not an advance, and the destination
+     depends on which pair made the nine. The dice travel with the step so the
+     client can say why it went to 26 rather than to 53. */
+  | { kind: 'opening9'; from: Square; to: Square; dice: number[] }
   | { kind: 'goose'; from: Square; to: Square; by: number }
   | { kind: 'bridge' | 'dice' | 'maze' | 'death'; from: Square; to: Square }
   | { kind: 'bounce'; from: Square; to: Square; overshoot: number }
+  /* The mirror of `bounce`, for a table playing without the exact finish: the
+     surplus is dropped instead of rebounding. Without it the move step reads
+     as an ordinary advance that happens to stop on 63. */
+  | { kind: 'overshoot'; from: Square; to: Square; overshoot: number }
   | { kind: 'blocked'; seat: Seat; at: Square; reason: BlockReason }
-  | { kind: 'rescue'; seat: Seat; at: Square; to: Square }
+  /* `reason` is the trap the seat is walking out of. The square alone would
+     make the client look 31 and 52 up on the board to tell them apart. */
+  | { kind: 'rescue'; seat: Seat; at: Square; to: Square; reason: BlockReason }
   | { kind: 'skip'; seat: Seat; turns: number }
   | { kind: 'double'; seat: Seat; dice: number[] }
   | { kind: 'tripleDouble'; seat: Seat; outcome: TripleDouble; from: Square; to: Square }
+  /* Every remaining seat is blocked and the round ends with no winner. It is a
+     rule of the spec, not an accident, so it says so rather than leaving the
+     client to infer it from a null winner. */
+  | { kind: 'deadlock' }
   | { kind: 'win'; seat: Seat; at: number }

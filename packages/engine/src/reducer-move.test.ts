@@ -35,6 +35,21 @@ describe('applyRoll, plain movement', () => {
     expect(state.winner).toBe(0)
   })
 
+  it('names the dropped surplus rather than clamping it in silence', () => {
+    /* The mirror of the bounce. Without its own kind, the chain reads
+       `move 62 -> 63 by 4`, which is an ordinary advance that happens to
+       land on the last square, and the rule that trimmed it is invisible. */
+    const { steps } = applyRoll(gameAt([62, 0], { exactFinish: false }), [3, 1])
+    expect(steps[0]).toEqual({ kind: 'move', from: 62, to: 66, by: 4 })
+    expect(steps).toContainEqual({ kind: 'overshoot', from: 66, to: 63, overshoot: 3 })
+    expect(steps.some((step) => step.kind === 'bounce')).toBe(false)
+  })
+
+  it('emits no correction at all when the throw lands square on 63', () => {
+    const { steps } = applyRoll(gameAt([60, 0], { exactFinish: false }), [2, 1])
+    expect(steps.some((step) => step.kind === 'overshoot' || step.kind === 'bounce')).toBe(false)
+  })
+
   it('passes the turn to the next seat', () => {
     const { state } = applyRoll(gameAt([1, 1, 1]), [1, 1])
     expect(state.turn).toBe(1)

@@ -55,9 +55,18 @@ describe('rules', () => {
       blocked: [null, 'prison' as const],
       turn: 0,
     }
-    const { state } = applyRoll(start, [1, 1]) // seat 0 lands in the well
+    const { state, steps } = applyRoll(start, [1, 1]) // seat 0 lands in the well
     expect(state.blocked[0]).toBe('well')
     expect(state.finished).toBe(true)
     expect(state.winner).toBeNull()
+    /* And it says so. A null winner on a finished round is the client being
+       left to work the rule out from the absence of something. */
+    expect(steps.at(-1)).toEqual({ kind: 'deadlock' })
+  })
+
+  it('says nothing about a deadlock while a seat can still roll', () => {
+    const start = { ...gameAt([29, 10], { rescue: false }), turn: 0 }
+    const { steps } = applyRoll(start, [1, 1])
+    expect(steps.some((step) => step.kind === 'deadlock')).toBe(false)
   })
 })

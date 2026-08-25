@@ -1,7 +1,7 @@
 # goose-multiplayer
 
 Jeu de l'oie en ligne, 2 à 6 joueurs, TypeScript, serveur autoritaire,
-auto-hébergé. Le moteur, le serveur et le client naviguateur sont en place :
+auto-hébergé. Le moteur, le serveur et le client navigateur sont en place :
 deux onglets suffisent pour jouer une partie complète.
 
 ## Lancer le jeu
@@ -54,6 +54,32 @@ Publier 5050 sur l'hôte ouvrirait une entrée en HTTP clair qui contourne TLS.
 Les tables vivent en mémoire : ne jamais dépasser une réplique. Deux répliques
 en tiendraient chacune la moitié sans que l'une connaisse l'autre.
 
+## Bout en bout
+
+La suite Playwright joue de vraies parties dans un navigateur, contre l'image
+réelle et derrière un vrai Traefik.
+
+```bash
+npx playwright install chromium
+npm run e2e
+```
+
+Rien à démarrer à la main : le `globalSetup` construit l'image, lève Traefik,
+attend `/healthz` et le `globalTeardown` redescend tout.
+
+Pourquoi un vrai Traefik plutôt que le serveur de dev : le serveur de dev
+proxie la montée en WebSocket pour vous, et c'est précisément ce qui casse en
+production. `e2e/compose.e2e.yaml` se superpose à `compose.traefik.yaml`, donc
+ce que la suite pilote est la définition de service qui part en déploiement,
+`BEHIND_TLS=true` et aucun mapping `ports:` compris. Aucune configuration
+WebSocket nulle part : Traefik proxie la montée lui-même, et la suite le prouve
+au lieu de le supposer.
+
+Trois parcours : le salon et les règles, une partie à deux jouée jusqu'au
+jardin, et une table pleine à six avec un septième joueur refusé.
+
+Le port d'entrée est le 8088, réglable avec `E2E_PORT`.
+
 ## Intégration continue
 
 | Workflow             | Ce qu'il fait                                                                                                                                                   |
@@ -82,21 +108,35 @@ pre-commit install
 | [Design](docs/superpowers/specs/2026-08-25-goose-multiplayer-design.md) | Les règles figées, l'architecture, le modèle du tour, les décisions et les alternatives écartées |
 | [`design/`](design/)                                                    | Les maquettes : table desktop et mobile, salon, cases spéciales                                  |
 
-Le canvas publié :
-<https://claude.ai/code/artifact/050ddd9e-a02a-4da7-a25b-9f30afdb845f>
-
 ## Les maquettes
 
-`design/build.mjs` génère les artboards. La géométrie de la spirale est calculée,
-pas dessinée : 62 cases sur trois tours, pas d'arc et pas radial égaux, case 63
-en médaillon central.
+![La table, desktop](design/png/Main.png)
+
+La direction visuelle est la risographie : encres en surimpression, aplats
+francs, Archivo Black, ombres portées dures. Elle a été retenue contre trois
+autres, gardées dans `design/png/` pour mémoire : une estampe gravée, un circuit
+néon et une géométrie suisse. C'est la seule des quatre qui tienne aussi bien à
+46 px de case sur un téléphone qu'en grand.
+
+|                                      |                                               |
+| ------------------------------------ | --------------------------------------------- |
+| ![Le salon](design/png/Lobby.png)    | ![Le mobile](design/png/TableMobile.png)      |
+| ![Les cases](design/png/Squares.png) | ![Écartée : estampe](design/png/Grimoire.png) |
+
+La couleur d'une case dit ce qu'elle fait, mais c'est de l'emphase et jamais le
+message : chaque case porte aussi son numéro, et chaque case spéciale son icône.
+Une couleur seule ne dit rien à un lecteur d'écran ni en plein soleil.
+
+La géométrie de la spirale est calculée, pas dessinée : 62 cases sur trois tours,
+pas d'arc et pas radial égaux pour que la bande se lise uniformément, case 63 en
+médaillon central. `apps/web/src/lib/board-layout.ts` porte un portage de cette
+même fonction, avec les mêmes paramètres. Ce sont deux copies et rien ne les
+tient synchronisées : changer la spirale ici demande de la changer là aussi.
 
 ```bash
-node design/build.mjs
+node design/build.mjs      # régénère les artboards
+node design/export-png.mjs # les rend en PNG dans design/png/
 ```
-
-La page publiée est assemblée à partir de ces artboards par l'outil de canvas et
-n'est pas versionnée, parce qu'elle embarque 2,7 Mo d'éditeur.
 
 ## Le monorepo
 

@@ -197,7 +197,7 @@ function board(th, { size = 560, cellR, pawns = [] } = {}) {
   const cy = size / 2;
   const pts = spiral({ cx, cy, r0: size / 2 - R - 6, pitch: size * 0.0906, step: size * 0.0906, count: 62 });
   const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const gardenR = R * 2.3;
+  const gardenR = R * 3.35;
   const id = th.key;
   let s = `<svg viewBox="0 0 ${size} ${size}" width="100%" style="display:block;max-width:${size}px" role="img" aria-label="Plateau du jeu de l'oie, 63 cases en spirale">`;
 
@@ -363,6 +363,10 @@ const helmet = (th, extra = '') => `<helmet>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?${th.fonts}&amp;display=swap" />
   <style>
+    /* Without this, a flex-basis sets the CONTENT box and borders plus padding
+       add on top: the chat rail measured 336px for a 300px basis and pushed the
+       artboard 30px past its declared width. */
+    *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: ${th.body}; -webkit-font-smoothing: antialiased; }
     h1, h2, h3 { font-family: ${th.display}; margin: 0; line-height: 1.08; }
     a { color: ${th.accent}; }
@@ -494,12 +498,12 @@ function mainArtboard(th) {
       ${ruleChip('Arrivée exacte', true)}${ruleChip('Deux dés', true)}${ruleChip('Délivrance', true)}${ruleChip('Ouverture 9', false)}${ruleChip('Cartes action', false)}
     </div>
 
-    <div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:210px minmax(0,1fr) 210px;gap:18px;align-items:center;border:2px solid ${th.ink};background:${th.surface};box-shadow:8px 8px 0 ${th.ink};padding:20px">
+    <div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:190px minmax(0,1fr) 190px;gap:18px;align-items:center;border:2px solid ${th.ink};background:${th.surface};box-shadow:8px 8px 0 ${th.ink};padding:20px">
       <div style="display:flex;flex-direction:column;gap:0.7rem;align-items:flex-start">
         ${plate(th, { ...PLAYERS[1], colour: cols[1], note: 'case 19' })}
         ${plate(th, { ...PLAYERS[3], colour: cols[3], note: 'absent · 72 s' })}
       </div>
-      <div style="display:flex;justify-content:center">${board(th, { size: 600, pawns })}</div>
+      <div style="display:flex;justify-content:center">${board(th, { size: 545, pawns })}</div>
       <div style="display:flex;flex-direction:column;gap:0.7rem;align-items:flex-end">
         ${plate(th, { ...PLAYERS[2], colour: cols[2], note: 'puits · bloqué' })}
         ${plate(th, { ...PLAYERS[4], colour: cols[4], note: 'case 6' })}
@@ -511,13 +515,13 @@ function mainArtboard(th) {
         ${plate(th, { ...PLAYERS[0], colour: cols[0], turn: true, note: 'à toi de jouer' })}
         <div style="display:flex;gap:0.45rem">${dieFace(th, 4, 54)}${dieFace(th, 3, 54)}</div>
         ${btn(th, 'Lancer les dés', true)}
-        <p style="margin:0;font-size:0.9rem;font-weight:600;color:${th.accent};max-width:24rem">7 · case 27, une oie : tu rejoues.</p>
+        <p style="margin:0;font-size:0.9rem;font-weight:600;color:${th.accent};max-width:16rem">7 · case 27, une oie : tu rejoues.</p>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:0.9rem;justify-content:flex-end">${legend(th)}</div>
     </div>
   </div>
 
-  <aside style="position:relative;flex:0 0 330px;display:flex;flex-direction:column;gap:0.7rem;border:2px solid ${th.ink};background:${th.surface};box-shadow:8px 8px 0 ${th.ink};padding:18px">
+  <aside style="position:relative;flex:0 0 300px;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:0.7rem;border:2px solid ${th.ink};background:${th.surface};box-shadow:8px 8px 0 ${th.ink};padding:18px">
     <h2 style="font-size:1.1rem;font-weight:${th.dw};letter-spacing:0.02em">LA PARTIE</h2>
     <div style="flex:1 1 auto;display:flex;flex-direction:column;gap:0.6rem;overflow:hidden">
       ${logLine('Théo', 'tombe sur le pont et file à la case 12.')}

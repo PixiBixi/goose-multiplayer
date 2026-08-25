@@ -10,6 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600&family=Space+Mono:wght@400;700&amp;display=swap" />
   <style>
+    /* Without this, a flex-basis sets the CONTENT box and borders plus padding
+       add on top: the chat rail measured 336px for a 300px basis and pushed the
+       artboard 30px past its declared width. */
+    *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: 'Archivo', 'Helvetica Neue', Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
     h1, h2, h3 { font-family: 'Archivo Black', 'Helvetica Neue', Impact, sans-serif; margin: 0; line-height: 1.08; }
     a { color: #ff4f7b; }

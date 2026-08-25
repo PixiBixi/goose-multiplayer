@@ -46,6 +46,8 @@ function entryFor(target: Element): ResizeObserverEntry {
   } as unknown as ResizeObserverEntry
 }
 
+const realRect = Element.prototype.getBoundingClientRect
+
 /** Sets the width every observed element reports, then fires the observers. */
 export function resizeTo(width: number): void {
   Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
@@ -73,4 +75,6 @@ globalThis.ResizeObserver = StubResizeObserver
 afterEach(() => {
   cleanup()
   vi.useRealTimers()
+  Element.prototype.getBoundingClientRect = realRect
+  observers.clear()
 })

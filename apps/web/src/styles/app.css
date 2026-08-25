@@ -234,6 +234,54 @@ button.primary:disabled {
   font-size: var(--step--1);
 }
 
+/* ------------------------------------------------------------------ board */
+
+.board {
+  width: 100%;
+  min-width: 0;
+}
+
+.board-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board-highlight {
+  animation: ring 900ms ease-in-out infinite;
+}
+
+@keyframes ring {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: var(--step--1);
+  color: var(--dim);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .swatch {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

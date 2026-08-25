@@ -1,5 +1,5 @@
 import { BOARD_SIZE, effectAt } from './board.js'
-import type { GameState, Square, Step } from './types.js'
+import type { GameState, Seat, Square, Step } from './types.js'
 
 /* The chain is provably bounded (see the spec), so this cap never fires on a
    correct reducer. It exists so a rule change that reopens a cycle fails a
@@ -25,6 +25,31 @@ function advance(from: Square, by: number, exactFinish: boolean): Advance {
   }
   const landed = Math.min(raw, BOARD_SIZE)
   return { landed, reached: landed, bounce: null }
+}
+
+/* Waiting is spent by being passed over, blocking is not: an inn costs one
+   turn, a well costs turns until someone frees you. Mutates the state it is
+   handed, which is always the reducer's private copy.
+
+   One function owns the whole rule, including the deadlock, because every
+   caller that advances the turn has to agree on when the round is over. */
+function nextTurnAfter(state: GameState, seat: Seat): Seat {
+  for (let hop = 1; hop <= state.seatCount; hop++) {
+    const candidate = (seat + hop) % state.seatCount
+    if (state.blocked[candidate] !== null) continue
+    if ((state.skipTurns[candidate] ?? 0) > 0) {
+      state.skipTurns[candidate] = (state.skipTurns[candidate] ?? 0) - 1
+      continue
+    }
+    return candidate
+  }
+
+  /* Nobody can act. With the rescue rule off, seats can be stuck for good, and
+     a table that waits for a seat that will never move is worse than a round
+     that ends. */
+  state.finished = true
+  state.winner = null
+  return seat
 }
 
 export function applyRoll(state: GameState, dice: number[]): { state: GameState; steps: Step[] } {
@@ -119,6 +144,6 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
     return { state: next, steps }
   }
 
-  next.turn = (seat + 1) % next.seatCount
+  next.turn = nextTurnAfter(next, seat)
   return { state: next, steps }
 }

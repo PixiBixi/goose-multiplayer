@@ -52,6 +52,24 @@ describe('Lobby', () => {
     expect(screen.getByRole('radio', { name: /Retour au départ/ })).toBeDisabled()
   })
 
+  it('greys the freeing double out on one die, where no double exists', () => {
+    setup(makeView({ config: { ...makeView().config, twoDice: false } }))
+    expect(screen.getByRole('checkbox', { name: /Double libérateur/ })).toBeDisabled()
+  })
+
+  it('lets the host say how long a trap keeps its player', async () => {
+    const { onConfigure, user } = setup()
+    expect(screen.getByRole('radio', { name: /3 tours/ })).toBeChecked()
+    await user.click(screen.getByRole('radio', { name: /2 tours/ }))
+    expect(onConfigure).toHaveBeenCalledWith({ maxBlockedTurns: 2 })
+  })
+
+  it('keeps the historic table on the panel, as a choice and not as a default', async () => {
+    const { onConfigure, user } = setup()
+    await user.click(screen.getByRole('radio', { name: /Jamais/ }))
+    expect(onConfigure).toHaveBeenCalledWith({ maxBlockedTurns: null })
+  })
+
   it('lets the host pick what a third double costs', async () => {
     const { onConfigure, user } = setup()
     const pass = screen.getByRole('radio', { name: /Le tour passe/ })

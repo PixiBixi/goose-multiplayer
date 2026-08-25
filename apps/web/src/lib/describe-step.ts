@@ -35,6 +35,24 @@ export function describeStep(step: Step, names: string[]): string {
       })
     case 'rescue':
       return t('step.rescue', { name: who(step.seat), at: step.at, to: step.to })
+    /* Three doors, three lines. Read off the step's own reason like `blocked`
+       is, never off the square: 31 and 52 are the board's business. */
+    case 'freed':
+      return t(step.reason === 'well' ? 'step.freedWell' : 'step.freedPrison', {
+        name: who(step.seat),
+        waited: step.waited,
+      })
+    case 'escape':
+      return t(step.reason === 'well' ? 'step.escapeWell' : 'step.escapePrison', {
+        name: who(step.seat),
+        face: step.dice[0] ?? 0,
+      })
+    case 'escapeFailed':
+      return t(step.reason === 'well' ? 'step.escapeFailedWell' : 'step.escapeFailedPrison', {
+        name: who(step.seat),
+        a: step.dice[0] ?? 0,
+        b: step.dice[1] ?? 0,
+      })
     case 'skip':
       return t('step.skip', { name: who(step.seat), turns: step.turns })
     case 'double':
@@ -75,8 +93,13 @@ export function landingOf(step: Step): Square | null {
       return clamp(step.to)
     case 'blocked':
     case 'rescue':
+    case 'freed':
+    case 'escape':
+    case 'escapeFailed':
       /* `at` is where the seat that just rolled is standing; a rescue moves
-         somebody else, and their new square comes with the next view. */
+         somebody else, and their new square comes with the next view. The
+         three exits all name the square the trap is on, and the move step
+         that follows an escape is what carries the pawn off it. */
       return clamp(step.at)
     case 'win':
       return clamp(step.at)

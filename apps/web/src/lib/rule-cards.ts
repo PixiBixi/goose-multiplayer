@@ -24,6 +24,8 @@ export type RuleId =
   | 'bounce'
   | 'overshoot'
   | 'rescue'
+  | 'freed'
+  | 'escape'
   | 'double'
   | 'tripleDouble'
   | 'garden'
@@ -52,6 +54,8 @@ const LOOK: Record<RuleId, { icon: IconName; tone: Tone }> = {
   bounce: { icon: 'garden', tone: 'garden' },
   overshoot: { icon: 'garden', tone: 'garden' },
   rescue: { icon: 'well', tone: 'trap' },
+  freed: { icon: 'well', tone: 'trap' },
+  escape: { icon: 'dice', tone: 'move' },
   double: { icon: 'dice', tone: 'move' },
   tripleDouble: { icon: 'dice', tone: 'move' },
   garden: { icon: 'garden', tone: 'garden' },
@@ -86,6 +90,14 @@ export function ruleOf(step: Step): RuleId | null {
       return 'inn'
     case 'rescue':
       return 'rescue'
+    case 'freed':
+      return 'freed'
+    case 'escape':
+      return 'escape'
+    case 'escapeFailed':
+      /* A miss fires no rule. The turn log says the seat tried, and a card on
+         every failed attempt would be the same sentence three turns running. */
+      return null
     case 'double':
       return 'double'
     case 'tripleDouble':
@@ -105,9 +117,11 @@ export function cardFor(step: Step): RuleCardContent | null {
   const id = ruleOf(step)
   if (id === null) return null
   const look = LOOK[id]
-  /* The rescue card wears the trap it opened, and the step is what says
-     which one. Same copy either way: one rule, two doors. */
-  const icon = step.kind === 'rescue' && step.reason === 'prison' ? 'prison' : look.icon
+  /* The cards that open a trap wear the trap they opened, and the step is what
+     says which one. Same copy either way: one rule, two doors. The escaping
+     double keeps its dice, because the dice are the rule. */
+  const opensTrap = step.kind === 'rescue' || step.kind === 'freed'
+  const icon = opensTrap && step.reason === 'prison' ? 'prison' : look.icon
   return {
     id,
     icon,

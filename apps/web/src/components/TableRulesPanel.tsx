@@ -8,11 +8,29 @@ export type TableRulesPanelProps = {
   onChange: (patch: Partial<TableConfig>) => void
 }
 
-type Rule = 'exactFinish' | 'twoDice' | 'rescue' | 'opening9' | 'doubleAgain'
+type Rule = 'exactFinish' | 'twoDice' | 'rescue' | 'opening9' | 'doubleAgain' | 'escapeOnDouble'
 
-const RULES: Rule[] = ['exactFinish', 'twoDice', 'rescue', 'opening9', 'doubleAgain']
+const RULES: Rule[] = [
+  'exactFinish',
+  'twoDice',
+  'rescue',
+  'opening9',
+  'doubleAgain',
+  'escapeOnDouble',
+]
 
 const OUTCOMES: TripleDouble[] = ['pass', 'restart']
+
+/* How long a seat sits in the well or the prison before the trap lets go.
+   `null` is the historic table, rescue only, kept because a host is allowed
+   to play it that way and not because it is a good idea: it measured as an
+   elimination in the large majority of games. */
+const WAITS: (number | null)[] = [1, 2, 3, 5, null]
+
+function waitLabel(turns: number | null): string {
+  if (turns === null) return t('rule.maxBlockedTurnsNever')
+  return t(turns === 1 ? 'rule.maxBlockedTurnsOne' : 'rule.maxBlockedTurnsMany', { turns })
+}
 
 const LABEL: Record<TripleDouble, string> = {
   pass: 'rule.tripleDoublePass',
@@ -33,7 +51,9 @@ export function TableRulesPanel({ config, canEdit, onChange }: TableRulesPanelPr
       <h3>{t('lobby.rulesTitle')}</h3>
       {RULES.map((rule) => {
         const disabled =
-          !canEdit || ((rule === 'opening9' || rule === 'doubleAgain') && needsTwoDice)
+          !canEdit ||
+          ((rule === 'opening9' || rule === 'doubleAgain' || rule === 'escapeOnDouble') &&
+            needsTwoDice)
         return (
           <label key={rule} className="switch" data-disabled={disabled}>
             <input
@@ -74,6 +94,34 @@ export function TableRulesPanel({ config, canEdit, onChange }: TableRulesPanelPr
             <span className="switch-text">
               <span className="switch-name">{t(LABEL[outcome])}</span>
               <span className="switch-help">{t(`${LABEL[outcome]}Help`)}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+
+      {/* The other half of the same question as the switches above: how long a
+          trap keeps its player. A row of turn counts rather than a switch,
+          because "off" here is one of the choices and the worst one. */}
+      <fieldset className="choice" data-disabled={!canEdit}>
+        <legend>{t('rule.maxBlockedTurns')}</legend>
+        <p className="switch-help">{t('rule.maxBlockedTurnsHelp')}</p>
+        {WAITS.map((turns) => (
+          <label key={String(turns)} className="switch" data-disabled={!canEdit}>
+            <input
+              type="radio"
+              name="maxBlockedTurns"
+              value={String(turns)}
+              checked={config.maxBlockedTurns === turns}
+              disabled={!canEdit}
+              onChange={() => {
+                onChange({ maxBlockedTurns: turns })
+              }}
+            />
+            <span className="switch-text">
+              <span className="switch-name">{waitLabel(turns)}</span>
+              {turns === null ? (
+                <span className="switch-help">{t('rule.maxBlockedTurnsNeverHelp')}</span>
+              ) : null}
             </span>
           </label>
         ))}

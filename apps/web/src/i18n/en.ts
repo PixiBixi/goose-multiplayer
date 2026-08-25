@@ -50,6 +50,17 @@ export const en = {
   'rule.tripleDoublePassHelp': 'The seat keeps everything it gained and hands over.',
   'rule.tripleDoubleRestart': 'Back to the start',
   'rule.tripleDoubleRestartHelp': 'The seat starts again from square 0, off the board.',
+  'rule.escapeOnDouble': 'A double sets you free',
+  'rule.escapeOnDoubleHelp':
+    'A blocked seat still rolls: a double lifts it out of the Well or the Prison and moves it on the same roll. Needs two dice.',
+  'rule.maxBlockedTurns': 'Let go after',
+  'rule.maxBlockedTurnsHelp':
+    'A blocked seat lets itself out after that many of its own turns. With no cap only a rescue opens the trap, and the seat usually stays there until the end.',
+  'rule.maxBlockedTurnsOne': '1 turn',
+  'rule.maxBlockedTurnsMany': '{turns} turns',
+  'rule.maxBlockedTurnsNever': 'Never',
+  'rule.maxBlockedTurnsNeverHelp':
+    'The historic rule: only a rescue opens the Well and the Prison.',
 
   'die.idle': 'Die, not rolled yet',
   'die.rolling': 'The dice are rolling',
@@ -58,6 +69,7 @@ export const en = {
   'table.yourTurn': 'Your turn',
   'table.turnOf': "{name}'s turn",
   'table.blockedYou': 'You are stuck, the table plays on without you.',
+  'table.blockedTry': 'You are stuck: roll, a double sets you free.',
   'table.leave': 'Leave the table',
   'table.legend': 'Legend',
   'table.log': 'Game log',
@@ -82,6 +94,10 @@ export const en = {
   'seat.left': 'Gone',
   'seat.blockedWell': 'In the well',
   'seat.blockedPrison': 'In prison',
+  'seat.blockedTryOne': '{trap} · 1 try left',
+  'seat.blockedTryMany': '{trap} · {turns} tries left',
+  'seat.blockedWaitOne': '{trap} · 1 turn left',
+  'seat.blockedWaitMany': '{trap} · {turns} turns left',
   'seat.skip': 'Skips a turn',
 
   'over.title': 'Game over',
@@ -103,6 +119,13 @@ export const en = {
   'step.blockedWell': '{name} falls into the Well and waits for a rescuer.',
   'step.blockedPrison': '{name} walks into the Prison and waits for a rescuer.',
   'step.rescue': '{name} is freed from square {at} and starts again from square {to}.',
+  'step.freedWell': '{name} has served the time: the Well lets go after {waited} turns.',
+  'step.freedPrison': '{name} has served the sentence: the Prison lets go after {waited} turns.',
+  'step.escapeWell': 'Double {face}: {name} climbs out of the Well and moves on the same roll.',
+  'step.escapePrison': 'Double {face}: {name} breaks out of the Prison and moves on the same roll.',
+  'step.escapeFailedWell': '{name} tries for the double to leave the Well: {a} and {b}, missed.',
+  'step.escapeFailedPrison':
+    '{name} tries for the double to leave the Prison: {a} and {b}, missed.',
   'step.skip': '{name} lingers at the Inn and skips a turn.',
   'step.double': 'Double {face}: {name} rolls again.',
   'step.triplePass': '{name} rolls a third double, the turn passes.',
@@ -148,7 +171,13 @@ export const en = {
     'This table plays without the exact finish: passing 63 is enough to win, and the surplus is dropped instead of bouncing you back.',
   'card.rescue.name': 'The Rescue',
   'card.rescue.why':
-    'You only leave the Well or the Prison when another player lands there and takes your place: without this rule an unlucky seat would sit there until the round ended.',
+    'The oldest of the three doors: another player falls into the Well or the Prison, takes the place and frees whoever was there. It is the only one that moves two pawns at once.',
+  'card.escape.name': 'The freeing double',
+  'card.escape.why':
+    'A blocked seat still rolls, and a double opens the Well or the Prison: it gets out and moves on the same roll. That double hands back no extra roll, it already paid for the way out.',
+  'card.freed.name': 'The capped sentence',
+  'card.freed.why':
+    'The trap lets its player go after three of their own turns, even if nobody comes. Without that cap, 56% of two player games ended with a seat still at the bottom of the hole: falling in was an elimination, not a setback.',
   'card.double.name': 'The Double',
   'card.double.why':
     'A house rule: a double hands the same seat another roll. Neither the printed board nor any known edition carries it, the game of the goose grants its re-rolls through the goose squares.',

@@ -18,6 +18,9 @@ const ONE_OF_EACH: Record<(typeof STEP_KINDS)[number], Step> = {
   overshoot: { kind: 'overshoot', from: 66, to: 63, overshoot: 3 },
   blocked: { kind: 'blocked', seat: 0, at: 31, reason: 'well' },
   rescue: { kind: 'rescue', seat: 1, at: 31, to: 20, reason: 'well' },
+  freed: { kind: 'freed', seat: 0, at: 31, reason: 'well', waited: 3 },
+  escape: { kind: 'escape', seat: 0, at: 52, reason: 'prison', dice: [4, 4] },
+  escapeFailed: { kind: 'escapeFailed', seat: 0, at: 52, reason: 'prison', dice: [4, 2] },
   skip: { kind: 'skip', seat: 0, turns: 1 },
   double: { kind: 'double', seat: 0, dice: [4, 4] },
   tripleDouble: { kind: 'tripleDouble', seat: 0, outcome: 'restart', from: 20, to: 0 },
@@ -29,8 +32,11 @@ describe('rule cards', () => {
   it('has a card for every rule the engine can name', () => {
     for (const kind of STEP_KINDS) {
       const step = ONE_OF_EACH[kind]
-      if (kind === 'move') {
-        expect(ruleOf(step), 'an ordinary advance is not a rule').toBeNull()
+      /* The two steps that fire no rule: an ordinary advance, and a missed
+         escape attempt. A card on either would train the table to stop
+         reading them. */
+      if (kind === 'move' || kind === 'escapeFailed') {
+        expect(ruleOf(step), `${kind} is not a rule`).toBeNull()
         continue
       }
       const card = cardFor(step)
@@ -78,6 +84,29 @@ describe('rule cards', () => {
     expect(cardFor({ kind: 'rescue', seat: 1, at: 52, to: 20, reason: 'prison' })?.icon).toBe(
       'prison',
     )
+  })
+
+  it('wears the trap the served sentence opened', () => {
+    expect(cardFor({ kind: 'freed', seat: 0, at: 52, reason: 'prison', waited: 3 })?.icon).toBe(
+      'prison',
+    )
+    expect(cardFor({ kind: 'freed', seat: 0, at: 31, reason: 'well', waited: 3 })?.icon).toBe(
+      'well',
+    )
+  })
+
+  it('gives the three exits three different cards', () => {
+    /* Replaced, let go, or out on your own double: three rules, and a player
+       who is told the wrong one has been told nothing. */
+    expect(ruleOf(ONE_OF_EACH.rescue)).toBe('rescue')
+    expect(ruleOf(ONE_OF_EACH.freed)).toBe('freed')
+    expect(ruleOf(ONE_OF_EACH.escape)).toBe('escape')
+  })
+
+  it('says that the escaping double hands back no extra roll', () => {
+    /* It reads like a bug otherwise: every other double at this table gives
+       the seat another go. */
+    expect(cardFor(ONE_OF_EACH.escape)?.why).toMatch(/ne redonne pas la main/i)
   })
 
   it('queues one card per rule, not one per step', () => {

@@ -50,6 +50,17 @@ export const fr = {
   'rule.tripleDoublePassHelp': "Le siège garde tout ce qu'il a gagné et rend la main.",
   'rule.tripleDoubleRestart': 'Retour au départ',
   'rule.tripleDoubleRestartHelp': 'Le siège repart de la case 0, hors du plateau.',
+  'rule.escapeOnDouble': 'Double libérateur',
+  'rule.escapeOnDoubleHelp':
+    "Un siège bloqué lance quand même : un double le sort du Puits ou de la Prison et l'avance du même lancer. Demande deux dés.",
+  'rule.maxBlockedTurns': 'Sortie au bout de',
+  'rule.maxBlockedTurnsHelp':
+    "Un siège bloqué sort de lui-même après ce nombre de ses propres tours. Sans plafond, seul un sauvetage l'en sort, et il y reste le plus souvent jusqu'à la fin.",
+  'rule.maxBlockedTurnsOne': '1 tour',
+  'rule.maxBlockedTurnsMany': '{turns} tours',
+  'rule.maxBlockedTurnsNever': 'Jamais',
+  'rule.maxBlockedTurnsNeverHelp':
+    'La règle historique : seul un sauvetage ouvre le Puits et la Prison.',
 
   'die.idle': 'Dé, pas encore lancé',
   'die.rolling': 'Les dés roulent',
@@ -58,6 +69,7 @@ export const fr = {
   'table.yourTurn': 'À toi de jouer',
   'table.turnOf': 'Au tour de {name}',
   'table.blockedYou': 'Tu es bloqué, la table joue sans toi.',
+  'table.blockedTry': 'Tu es bloqué : lance les dés, un double te libère.',
   'table.leave': 'Quitter la table',
   'table.legend': 'Légende',
   'table.log': 'Fil de la partie',
@@ -82,6 +94,10 @@ export const fr = {
   'seat.left': 'Parti',
   'seat.blockedWell': 'Au puits',
   'seat.blockedPrison': 'En prison',
+  'seat.blockedTryOne': '{trap} · encore 1 essai',
+  'seat.blockedTryMany': '{trap} · encore {turns} essais',
+  'seat.blockedWaitOne': '{trap} · encore 1 tour',
+  'seat.blockedWaitMany': '{trap} · encore {turns} tours',
   'seat.skip': 'Passe son tour',
 
   'over.title': 'Partie terminée',
@@ -103,6 +119,13 @@ export const fr = {
   'step.blockedWell': '{name} tombe dans le Puits et attend un sauveteur.',
   'step.blockedPrison': '{name} entre en Prison et attend un sauveteur.',
   'step.rescue': '{name} est libéré de la case {at} et repart en case {to}.',
+  'step.freedWell': '{name} a fait son temps : le Puits le relâche après {waited} tours.',
+  'step.freedPrison': '{name} a purgé sa peine : la Prison le relâche après {waited} tours.',
+  'step.escapeWell': 'Double {face} : {name} se hisse hors du Puits et avance dans la foulée.',
+  'step.escapePrison':
+    'Double {face} : {name} force la porte de la Prison et avance dans la foulée.',
+  'step.escapeFailedWell': '{name} tente le double pour sortir du Puits : {a} et {b}, raté.',
+  'step.escapeFailedPrison': '{name} tente le double pour sortir de la Prison : {a} et {b}, raté.',
   'step.skip': "{name} s'attarde à l'Auberge et passe son tour.",
   'step.double': 'Double {face} : {name} rejoue.',
   'step.triplePass': '{name} fait un troisième double, le tour passe.',
@@ -148,7 +171,13 @@ export const fr = {
     "Cette table joue sans l'arrivée exacte : dépasser 63 suffit à gagner, le surplus est perdu au lieu de faire rebondir en arrière.",
   'card.rescue.name': 'Le Sauvetage',
   'card.rescue.why':
-    "On ne sort du Puits ou de la Prison que si un autre joueur y tombe et prend la place : sans cette règle, un siège malchanceux y resterait jusqu'à la fin de la manche.",
+    "La plus ancienne des trois portes : un autre joueur tombe dans le Puits ou la Prison, prend la place et libère celui qui y était. C'est la seule qui déplace deux pions d'un coup.",
+  'card.escape.name': 'Le double libérateur',
+  'card.escape.why':
+    'Un siège bloqué lance quand même, et un double ouvre le Puits ou la Prison : il sort et avance du même lancer. Ce double-là ne redonne pas la main, il a déjà payé la sortie.',
+  'card.freed.name': 'La peine plafonnée',
+  'card.freed.why':
+    'Le piège relâche son joueur au bout de trois de ses tours, même si personne ne vient. Sans ce plafond, 56 % des parties à deux se terminaient avec un siège encore au fond du trou : y tomber était une élimination, pas un revers.',
   'card.double.name': 'Le Double',
   'card.double.why':
     "Règle maison : un double redonne la main au même siège. Ni le plateau imprimé ni aucune édition connue ne la contient, les relances du jeu de l'oie viennent des cases oie.",

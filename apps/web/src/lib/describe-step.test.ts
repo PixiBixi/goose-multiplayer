@@ -20,6 +20,32 @@ describe('describeStep', () => {
     ).toContain('Claire')
   })
 
+  it('gives the three exits three different lines', () => {
+    const freed = describeStep(
+      { kind: 'freed', seat: 1, at: 52, reason: 'prison', waited: 3 },
+      names,
+    )
+    expect(freed).toContain('Claire')
+    expect(freed).toMatch(/prison/i)
+    expect(freed).toContain('3')
+
+    const escape = describeStep(
+      { kind: 'escape', seat: 0, at: 31, reason: 'well', dice: [4, 4] },
+      names,
+    )
+    expect(escape).toMatch(/double/i)
+    expect(escape).toMatch(/puits/i)
+
+    const missed = describeStep(
+      { kind: 'escapeFailed', seat: 0, at: 31, reason: 'well', dice: [4, 2] },
+      names,
+    )
+    /* A miss has to be visible, or the turn reads as if the seat had simply
+       been skipped and the player never sees that it played. */
+    expect(missed).toMatch(/rat[ée]/i)
+    expect(missed).toContain('Jérémy')
+  })
+
   it('tells the well and the prison apart', () => {
     expect(describeStep({ kind: 'blocked', seat: 0, at: 31, reason: 'well' }, names)).toMatch(
       /puits/i,

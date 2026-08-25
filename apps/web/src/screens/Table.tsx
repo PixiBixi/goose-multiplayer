@@ -170,7 +170,15 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
        so "Au puits" appears when the pawn falls in and not while the dice are
        still in the air. Still the server's account, only less of it. */
     const played = turn.steps.slice(0, playback.played)
-    const held = played.find((step) => step.kind === 'blocked' && step.seat === turn.seat)
+    const fell = played.find((step) => step.kind === 'blocked' && step.seat === turn.seat)
+    /* A seat that started its turn in a trap says so in the chain's very first
+       step, and it is still in there until the escape actually plays. Without
+       this the plate would drop the trap the moment the dice settle, which is
+       exactly the turn where the player is watching it. */
+    const opening = turn.steps[0]
+    const trapped =
+      opening?.kind === 'escape' || opening?.kind === 'escapeFailed' ? opening.reason : null
+    const escaped = played.some((step) => step.kind === 'escape' && step.seat === turn.seat)
     const waits = played.reduce(
       (total, step) =>
         step.kind === 'skip' && step.seat === turn.seat ? total + step.turns : total,
@@ -181,7 +189,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
         ? {
             ...seat,
             position: playback.square as number,
-            blocked: held?.kind === 'blocked' ? held.reason : null,
+            blocked: fell?.kind === 'blocked' ? fell.reason : escaped ? null : trapped,
             skipTurns: waits,
           }
         : seat,
@@ -267,7 +275,9 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
               {t('table.roll')}
             </button>
           </div>
-          {you && you.blocked !== null ? <p className="hint">{t('table.blockedYou')}</p> : null}
+          {you && you.blocked !== null ? (
+            <p className="hint">{t(you.blockedTrying ? 'table.blockedTry' : 'table.blockedYou')}</p>
+          ) : null}
           <p className="hint code-line">{view.code}</p>
         </section>
 

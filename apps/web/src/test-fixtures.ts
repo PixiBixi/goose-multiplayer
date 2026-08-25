@@ -10,6 +10,8 @@ export function makeSeat(seat: number, patch: Partial<SeatView> = {}): SeatView 
     presence: 'active',
     position: 0,
     blocked: null,
+    blockedTurnsLeft: null,
+    blockedTrying: false,
     skipTurns: 0,
     colour: COLOURS[seat] ?? '#000000',
     ...patch,

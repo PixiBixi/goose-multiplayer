@@ -177,6 +177,56 @@ describe('Table', () => {
     )
     expect(screen.getByText('Au puits')).toBeInTheDocument()
   })
+
+  /* The countdown is half the fix. A player staring at a stuck pawn with no
+     idea whether they will ever play again is the experience being repaired,
+     so the number has to be on the plate and not only in the rules. */
+  it('counts down the tries a blocked seat has left, on its own plate', () => {
+    setup(
+      makeView({
+        phase: 'playing',
+        seats: [
+          makeSeat(0, { position: 31, blocked: 'well', blockedTurnsLeft: 2, blockedTrying: true }),
+          makeSeat(1),
+        ],
+        turn: { seat: 1, legalMoves: [], deadlineAt: null },
+      }),
+    )
+    expect(screen.getByTestId('seat-blocked')).toHaveTextContent('Au puits · encore 2 essais')
+  })
+
+  it('says waiting rather than trying when no roll of the seat could free it', () => {
+    setup(
+      makeView({
+        phase: 'playing',
+        seats: [
+          makeSeat(0, {
+            position: 52,
+            blocked: 'prison',
+            blockedTurnsLeft: 1,
+            blockedTrying: false,
+          }),
+          makeSeat(1),
+        ],
+        turn: { seat: 1, legalMoves: [], deadlineAt: null },
+      }),
+    )
+    expect(screen.getByTestId('seat-blocked')).toHaveTextContent('En prison · encore 1 tour')
+  })
+
+  it('tells the blocked player they still get to roll for it', () => {
+    setup(
+      makeView({
+        phase: 'playing',
+        seats: [
+          makeSeat(0, { position: 31, blocked: 'well', blockedTurnsLeft: 3, blockedTrying: true }),
+          makeSeat(1),
+        ],
+        turn: { seat: 0, legalMoves: ['roll'], deadlineAt: null },
+      }),
+    )
+    expect(screen.getByText(/un double te libère/i)).toBeInTheDocument()
+  })
 })
 
 describe('Table, the roll it plays out', () => {

@@ -18,7 +18,7 @@ describe('createGame', () => {
       exactFinish: true,
       twoDice: true,
       rescue: true,
-      opening9: false,
+      opening9: true,
       mode: 'classic',
     })
   })

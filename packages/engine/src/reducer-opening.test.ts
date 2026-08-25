@@ -24,10 +24,22 @@ describe('the opening nine', () => {
   it('is what stops a nine from winning on the first roll', () => {
     // Without the rule, 0 + 9 is a goose, and every re-advance of nine lands
     // on the next goose: 9, 18, 27, 36, 45, 54, then 63. That instant win is
-    // the whole reason the opening nine exists.
-    const { state } = applyRoll(createGame(2), [6, 3])
+    // the whole reason the opening nine exists, and why it ships on.
+    const { state } = applyRoll(createGame(2, { opening9: false }), [6, 3])
     expect(state.positions[0]).toBe(63)
     expect(state.winner).toBe(0)
+  })
+
+  it('leaves no first roll of the default ruleset winning outright', () => {
+    // The regression guard for the default. Four of these thirty-six used to
+    // end the game before the second seat had played.
+    for (let a = 1; a <= 6; a++) {
+      for (let b = 1; b <= 6; b++) {
+        const { state } = applyRoll(createGame(2), [a, b])
+        expect(state.winner, `dice ${a}+${b}`).toBeNull()
+        expect(state.finished, `dice ${a}+${b}`).toBe(false)
+      }
+    }
   })
 
   it('plays a single die when two dice are off', () => {

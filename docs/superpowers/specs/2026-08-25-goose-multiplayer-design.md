@@ -120,7 +120,7 @@ Configurables par l'hôte, avant le premier lancer uniquement.
 | `exactFinish` | activée | Il faut tomber pile sur 63. Le surplus fait rebondir en arrière. Désactivée, on gagne dès qu'on atteint ou dépasse 63. |
 | `twoDice` | activée | Deux dés à six faces. Désactivée, un seul dé et la partie dure environ deux fois plus longtemps. |
 | `rescue` | activée | Un joueur bloqué au puits ou en prison est libéré quand un autre arrive sur la case et prend sa place. Désactivée, il y reste jusqu'à la fin de la manche. |
-| `opening9` | désactivée | Un 9 au premier lancer envoie directement en 26 si les dés font 6+3, en 53 si 5+4. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
+| `opening9` | activée | Un 9 au premier lancer envoie directement en 26 si les dés font 6+3, en 53 si 5+4. Activée par défaut parce que sans elle un 9 d'ouverture enchaîne les oies 9, 18, 27, 36, 45, 54 puis 63 et gagne la partie d'emblée. N'a de sens qu'avec `twoDice`. L'interface la désactive et la grise quand `twoDice` est décochée. |
 | `mode: 'cards'` | désactivé | La variante à cartes action. Refusée par le serveur en v1 (voir §8). |
 
 ### Blocages, attente et ordre du tour

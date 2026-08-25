@@ -7,7 +7,10 @@ export const DEFAULT_CONFIG: TableConfig = {
   exactFinish: true,
   twoDice: true,
   rescue: true,
-  opening9: false,
+  /* On by default: without it a 9 on the opening roll chains the geese
+     9-18-27-36-45-54-63 and wins outright, in 4 of the 36 dice combinations.
+     Do NOT flip it back off. See reducer-opening.test.ts. */
+  opening9: true,
   mode: 'classic',
 }
 

@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { Step } from '@goose/engine'
 import type { TableView } from '@goose/protocol'
 import { makeSeat, makeView } from '../test-fixtures.js'
 import { resizeTo, setReducedMotion } from '../test-setup.js'
@@ -454,5 +455,100 @@ describe('Table, the roll it plays out', () => {
     /* And it holds nothing up: the chain is already all on screen, so the
        seat on turn rolls whenever it likes and the card waits to be clicked. */
     expect(screen.getByRole('button', { name: 'Lancer les dés' })).toBeEnabled()
+  })
+})
+
+/* The crash the owner hit on the live site: an old tab against a new server.
+   The bundle in that tab had never heard of the step kind it was handed, and
+   the page went down instead of skipping a line. A unit test on ruleOf would
+   have passed on the broken code, because ruleOf never threw: the component
+   rendering the turn is where it fell over. */
+describe('Table, a turn carrying a step this bundle has never heard of', () => {
+  const TUMBLE_MS = 900
+  const STEP_MS = 450
+
+  /* Cast on purpose: the whole point is that the type system cannot see this
+     kind, because it was added to the engine after this bundle was built. */
+  const unknownStep = {
+    kind: 'quarantine',
+    seat: 0,
+    at: 7,
+    to: 9,
+    reason: 'lockdown',
+  } as unknown as Step
+
+  const withUnknown = (): TableView =>
+    makeView({
+      phase: 'playing',
+      lastTurn: {
+        seat: 0,
+        dice: [3, 4],
+        steps: [
+          { kind: 'move', from: 0, to: 7, by: 7 },
+          unknownStep,
+          { kind: 'goose', from: 9, to: 14, by: 5 },
+        ],
+      },
+      turn: { seat: 1, legalMoves: [], deadlineAt: null },
+    })
+
+  it('still draws the table, and narrates every step it does know', () => {
+    const { container } = setup(withUnknown())
+
+    expect(screen.getByTestId('board-spiral')).toBeInTheDocument()
+    const log = container.querySelector('.turn-log')
+    expect(log?.textContent).toMatch(/de la case 0 à la case 7/)
+    expect(log?.textContent).toMatch(/L'oie de la case 9/)
+    /* The roll and the two steps it can name. The one it cannot is left out
+       rather than printed as a blank line. */
+    expect(log?.querySelectorAll('li')).toHaveLength(3)
+    expect(log?.textContent).not.toContain('quarantine')
+  })
+
+  it('still shows the card of the rule that did fire in the same chain', () => {
+    setup(withUnknown())
+    expect(screen.getByTestId('rule-card')).toHaveAttribute('data-rule', 'goose')
+  })
+
+  it('walks the rest of the chain instead of stopping on the step it cannot name', () => {
+    vi.useFakeTimers()
+    const { container } = setup(withUnknown(), false)
+    const log = () => container.querySelector('.turn-log')?.textContent ?? ''
+    const where = () => container.querySelector('.seat-list')?.textContent ?? ''
+
+    act(() => {
+      vi.advanceTimersByTime(TUMBLE_MS)
+    })
+    expect(log()).toMatch(/de la case 0 à la case 7/)
+
+    /* The unknown step gets its beat and says nothing, and the pawn stays on
+       the square the last step it understood put it on. */
+    act(() => {
+      vi.advanceTimersByTime(STEP_MS)
+    })
+    expect(where()).toContain('Case 7')
+    expect(container.querySelectorAll('.turn-log li')).toHaveLength(2)
+
+    act(() => {
+      vi.advanceTimersByTime(STEP_MS)
+    })
+    expect(log()).toMatch(/L'oie de la case 9/)
+    expect(where()).toContain('Case 14')
+  })
+
+  it('says nothing about a trap it cannot name, and keeps the seat on the board', () => {
+    const blocked = { blocked: 'quarantine' } as unknown as { blocked: 'well' }
+    const { container } = setup(
+      makeView({
+        phase: 'playing',
+        seats: [makeSeat(0, { position: 31, ...blocked }), makeSeat(1)],
+        turn: { seat: 1, legalMoves: [], deadlineAt: null },
+      }),
+    )
+    /* No plate rather than the wrong plate: "En prison" for a trap that is
+       not the prison is a rule the player has been told wrongly. */
+    expect(screen.queryByTestId('seat-blocked')).toBeNull()
+    expect(screen.getByTestId('board-spiral')).toBeInTheDocument()
+    expect(container.querySelector('.seat-list')?.textContent).toContain('Case 31')
   })
 })

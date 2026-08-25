@@ -135,4 +135,45 @@ describe('rule cards', () => {
   it('shows nothing for a turn that fired no rule at all', () => {
     expect(cardsFor([{ kind: 'move', from: 1, to: 4, by: 3 }])).toEqual([])
   })
+
+  /* The wire is a version boundary: a tab loaded before a deploy is handed
+     kinds its own bundle has never heard of. The switch used to fall through
+     and return undefined, and the LOOK lookup that followed took the whole
+     page down. */
+  describe('a step from a newer server', () => {
+    /* Cast because the whole point is that the type system cannot see it: this
+       is a rule that did not exist when this bundle was built. */
+    const unknownStep = { kind: 'quarantine', seat: 0, at: 7, to: 9 } as unknown as Step
+    const unknownReason = {
+      kind: 'blocked',
+      seat: 0,
+      at: 31,
+      reason: 'quarantine',
+    } as unknown as Step
+
+    it('names no rule rather than falling off the end of the switch', () => {
+      expect(ruleOf(unknownStep)).toBeNull()
+    })
+
+    it('makes no card, and above all does not throw looking one up', () => {
+      expect(() => cardFor(unknownStep)).not.toThrow()
+      expect(cardFor(unknownStep)).toBeNull()
+    })
+
+    it('skips it in the queue and keeps the rules around it', () => {
+      const chain = [
+        { kind: 'move', from: 0, to: 5, by: 5 } as Step,
+        unknownStep,
+        { kind: 'goose', from: 5, to: 10, by: 5 } as Step,
+      ]
+      expect(cardsFor(chain).map((card) => card.id)).toEqual(['goose'])
+    })
+
+    it('says nothing about a trap it cannot name', () => {
+      /* Rather than calling it a prison because that is the other side of a
+         ternary: a player told the wrong rule has been told nothing. */
+      expect(ruleOf(unknownReason)).toBeNull()
+      expect(cardFor(unknownReason)).toBeNull()
+    })
+  })
 })

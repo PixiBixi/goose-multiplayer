@@ -59,7 +59,10 @@ export function TableRulesPanel({ config, canEdit, onChange }: TableRulesPanelPr
             <input
               type="checkbox"
               name={rule}
-              checked={config[rule]}
+              /* Defaulted, because the config came off the wire: a server that
+                 drops a rule this bundle still draws would otherwise flip the
+                 box to uncontrolled and it would stop following the host. */
+              checked={config[rule] ?? false}
               disabled={disabled}
               onChange={(event) => {
                 onChange({ [rule]: event.target.checked })

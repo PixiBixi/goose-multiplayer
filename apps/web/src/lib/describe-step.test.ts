@@ -1,3 +1,4 @@
+import type { Step } from '@goose/engine'
 import { describe, expect, it } from 'vitest'
 import { describeStep, flightOf, landingOf, originOf } from './describe-step.js'
 
@@ -149,6 +150,57 @@ describe('originOf', () => {
 
   it('has nothing to say about an empty chain', () => {
     expect(originOf([])).toBeNull()
+  })
+
+  it('refuses a `from` that is not a square, whatever the server put there', () => {
+    /* The first step may be of a kind this bundle has never seen, and a NaN
+       square draws the highlight nowhere. */
+    const odd = [{ kind: 'quarantine', from: 'somewhere' }] as unknown as Step[]
+    expect(originOf(odd)).toBeNull()
+  })
+})
+
+/* A tab loaded before a deploy is handed kinds, reasons and outcomes its own
+   bundle has never heard of. Every one of them has to degrade: a step this
+   client cannot name is a step it says nothing about, and the rest of the
+   chain still plays. */
+describe('a step from a newer server', () => {
+  const unknownStep = { kind: 'quarantine', seat: 0, at: 7, to: 9, from: 7 } as unknown as Step
+
+  it('narrates nothing rather than falling off the end of the switch', () => {
+    expect(describeStep(unknownStep, names)).toBeNull()
+  })
+
+  it('moves the pawn nowhere, so the walk carries on from where it was', () => {
+    expect(landingOf(unknownStep)).toBeNull()
+  })
+
+  it('does not fly it either', () => {
+    expect(flightOf(unknownStep)).toBeNull()
+  })
+
+  it('says nothing about a trap it cannot name, rather than naming the wrong one', () => {
+    const trap = { kind: 'blocked', seat: 0, at: 31, reason: 'quarantine' } as unknown as Step
+    const freed = {
+      kind: 'freed',
+      seat: 0,
+      at: 31,
+      reason: 'quarantine',
+      waited: 2,
+    } as unknown as Step
+    expect(describeStep(trap, names)).toBeNull()
+    expect(describeStep(freed, names)).toBeNull()
+  })
+
+  it('says nothing about a third double whose outcome it cannot name', () => {
+    const triple = {
+      kind: 'tripleDouble',
+      seat: 0,
+      outcome: 'confiscate',
+      from: 20,
+      to: 0,
+    } as unknown as Step
+    expect(describeStep(triple, names)).toBeNull()
   })
 })
 

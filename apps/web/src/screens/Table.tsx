@@ -138,12 +138,16 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
     if (revealed === 0) return
     const roller = view.seats[turn.seat]?.name ?? ''
     const total = turn.dice.reduce((a, b) => a + b, 0)
+    /* A step this bundle cannot name is left out of the feed rather than
+       printed as a blank line: an old tab meeting a rule shipped after it
+       loaded misses one line and keeps the rest of the turn. */
+    const narrated = turn.steps.slice(0, revealed).flatMap((step, index) => {
+      const text = describeStep(step, names)
+      return text === null ? [] : [{ id: `${signature}#${String(index)}`, text }]
+    })
     const lines: LogLine[] = [
       { id: `${signature}#roll`, text: t('table.rolled', { name: roller, total }) },
-      ...turn.steps.slice(0, revealed).map((step, index) => ({
-        id: `${signature}#${String(index)}`,
-        text: describeStep(step, names),
-      })),
+      ...narrated,
     ]
     /* Keyed on the signature and the count, deliberately: the same turn
        republished inside a new view (a chat message, a rule change) must not

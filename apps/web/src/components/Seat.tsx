@@ -1,6 +1,7 @@
 import type { SeatView } from '@goose/protocol'
 import type { JSX } from 'react'
 import { t } from '../i18n/index.js'
+import { trapOf } from '../lib/wire.js'
 import { initialOf } from './board-types.js'
 
 export type SeatProps = {
@@ -17,7 +18,12 @@ export type SeatProps = {
    the rules. */
 function trapLabel(seat: SeatView): string | null {
   if (seat.blocked === null) return null
-  const trap = t(seat.blocked === 'well' ? 'seat.blockedWell' : 'seat.blockedPrison')
+  /* A reason this bundle has never heard of gets no plate at all: naming the
+     wrong trap is worse than saying nothing, and the seat still shows where it
+     stands. See lib/wire.ts. */
+  const held = trapOf(seat.blocked)
+  if (held === null) return null
+  const trap = t(held === 'well' ? 'seat.blockedWell' : 'seat.blockedPrison')
   const turns = seat.blockedTurnsLeft
   if (turns === null) return trap
   /* Trying, not waiting: at a table that plays the freeing double the seat

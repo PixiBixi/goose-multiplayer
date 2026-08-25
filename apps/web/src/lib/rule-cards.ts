@@ -1,6 +1,7 @@
 import type { Step } from '@goose/engine'
 import { t } from '../i18n/index.js'
 import type { IconName, Tone } from './square-mark.js'
+import { trapOf, unknownWireValue } from './wire.js'
 
 /* One card per rule the engine can name. The id is derived from the step
    kind and from what the step itself carries, never from the square it
@@ -62,7 +63,9 @@ const LOOK: Record<RuleId, { icon: IconName; tone: Tone }> = {
   deadlock: { icon: 'prison', tone: 'trap' },
 }
 
-/** The rule a step fired, or null for a step that fired no rule at all. */
+/** The rule a step fired, or null when the step fired no rule this bundle can
+    name: one that fires none, or one whose kind was added to the engine after
+    this tab was loaded. */
 export function ruleOf(step: Step): RuleId | null {
   switch (step.kind) {
     case 'opening9':
@@ -85,7 +88,7 @@ export function ruleOf(step: Step): RuleId | null {
       /* Off the step's own reason, not off the square: 31 and 52 are the
          board's business, and reading them here would be the client working
          out a rule for itself. */
-      return step.reason === 'well' ? 'well' : 'prison'
+      return trapOf(step.reason)
     case 'skip':
       return 'inn'
     case 'rescue':
@@ -110,13 +113,22 @@ export function ruleOf(step: Step): RuleId | null {
       /* An ordinary advance is not a rule. A card on every roll would train
          the table to stop reading them. */
       return null
+    default:
+      /* A kind this bundle has never heard of. See wire.ts: the build still
+         fails when a rule is added to the engine and forgotten here, and an
+         old tab still gets a table instead of a blank page. */
+      return unknownWireValue(step, null)
   }
 }
 
 export function cardFor(step: Step): RuleCardContent | null {
   const id = ruleOf(step)
   if (id === null) return null
-  const look = LOOK[id]
+  /* Guarded even though the type says it cannot miss: `id` is derived from a
+     step that came off the wire, and this lookup is where an unnamed rule used
+     to take the whole page down. */
+  const look = LOOK[id] as (typeof LOOK)[RuleId] | undefined
+  if (look === undefined) return null
   /* The cards that open a trap wear the trap they opened, and the step is what
      says which one. Same copy either way: one rule, two doors. The escaping
      double keeps its dice, because the dice are the rule. */

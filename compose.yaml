@@ -1,0 +1,19 @@
+services:
+  goose:
+    build: .
+    image: goose-multiplayer:local
+    ports:
+      - '5050:5050'
+    environment:
+      # Same origin serves the client, so no CORS allowlist is needed.
+      CORS_ORIGIN: ''
+      # Quoted, and 'false' rather than false: unquoted YAML true/false reaches
+      # the container as 'true'/'false' anyway, but only by accident of the
+      # serialiser. Set this to 'true' once a proxy puts HTTPS in front.
+      BEHIND_TLS: 'false'
+      LOG_LEVEL: 'info'
+    restart: unless-stopped
+    # Rooms live in memory: never scale this past one replica. Two replicas
+    # would each hold half the tables and neither would know about the other.
+    deploy:
+      replicas: 1

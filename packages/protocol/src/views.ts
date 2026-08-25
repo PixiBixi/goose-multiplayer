@@ -2,6 +2,38 @@ import type { BlockReason, Move, Seat, Square, Step, TableConfig } from '@goose/
 
 export type Presence = 'active' | 'disconnected' | 'left'
 
+/* Every kind of step the wire carries, listed once. The engine names a rule,
+   this list acknowledges it, and the client switches on it: a rule added to
+   the engine and forgotten here fails to compile rather than reaching a
+   browser as a step nothing knows how to narrate. Do NOT widen the type to
+   `string` to make an addition build. */
+export const STEP_KINDS = [
+  'move',
+  'opening9',
+  'goose',
+  'bridge',
+  'dice',
+  'maze',
+  'death',
+  'bounce',
+  'overshoot',
+  'blocked',
+  'rescue',
+  'skip',
+  'double',
+  'tripleDouble',
+  'deadlock',
+  'win',
+] as const satisfies readonly Step['kind'][]
+
+export type StepKind = (typeof STEP_KINDS)[number]
+
+/* The other half of the contract. `satisfies` above proves every listed kind
+   is real; this is `never` exactly when every real kind is listed, and
+   views.test.ts is where that gets asserted. Both directions, or the list
+   drifts the moment a rule is added. */
+export type UnlistedStepKind = Exclude<Step['kind'], StepKind>
+
 export type SeatView = {
   seat: Seat
   name: string

@@ -1,0 +1,52 @@
+# The browser suite runs against a real Traefik rather than a dev server, because
+# a dev server proxies the WebSocket upgrade for you and proves nothing about the
+# thing that actually breaks in production.
+#
+# compose.traefik.yaml is the deployment file: it assumes TLS, a public hostname
+# and a network some existing Traefik already watches, none of which exist on a
+# laptop or a CI runner. This overlay supplies the Traefik and a plain-HTTP
+# entrypoint and layers on top of that file, so what the suite drives is the
+# service definition that ships.
+#
+#   docker compose -f compose.traefik.yaml -f e2e/compose.e2e.yaml up --build -d
+services:
+  traefik:
+    image: traefik:v3.7
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+    environment:
+      # Traefik's docker client falls back to API 1.24 when it cannot negotiate,
+      # and modern daemons refuse anything below 1.40: the provider then never
+      # discovers a container and every request 404s. Pinned low enough that any
+      # daemon since Docker 20.10 accepts it.
+      DOCKER_API_VERSION: '1.41'
+    ports:
+      - '${E2E_PORT:-8088}:80'
+    volumes:
+      # Read-only: Traefik reads container labels, it never writes to the daemon.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [traefik]
+
+  goose:
+    build: .
+    # Local tag, so `up --build` never reaches for the published image.
+    image: goose-multiplayer:e2e
+    depends_on: [traefik]
+    # !override rather than a merge: compose appends label lists, and a router
+    # with two rules is not a thing. Only the rule and the entrypoint change.
+    # No WebSocket configuration on purpose: Traefik proxies the upgrade itself,
+    # and proving that is the point of running the suite through it.
+    labels: !override
+      - traefik.enable=true
+      - traefik.http.routers.goose.rule=PathPrefix(`/`)
+      - traefik.http.routers.goose.entrypoints=web
+      - traefik.http.services.goose.loadbalancer.server.port=5050
+
+networks:
+  traefik:
+    # Created and torn down with the suite. The deployment file joins a network
+    # somebody else owns; here there is nobody else.
+    name: goose-e2e
+    external: false

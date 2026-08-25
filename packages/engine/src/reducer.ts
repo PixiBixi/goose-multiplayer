@@ -69,6 +69,20 @@ export function applyRoll(state: GameState, dice: number[]): { state: GameState;
       continue
     }
 
+    if (
+      effect &&
+      (effect.kind === 'bridge' ||
+        effect.kind === 'dice' ||
+        effect.kind === 'maze' ||
+        effect.kind === 'death')
+    ) {
+      steps.push({ kind: effect.kind, from: square, to: effect.to })
+      square = effect.to
+      /* The arrival square resolves nothing. Without this, 26 sends to 53,
+         which sends back to 26, for ever. Do NOT remove. */
+      break
+    }
+
     break
   }
 

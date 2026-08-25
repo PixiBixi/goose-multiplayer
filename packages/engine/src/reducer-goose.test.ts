@@ -15,19 +15,22 @@ describe('applyRoll, geese', () => {
 
   it('chains from goose to goose', () => {
     // 5 + 9 = 14, goose; 14 + 9 = 23, goose; 23 + 9 = 32, goose; 32 + 9 = 41,
-    // goose; 41 + 9 = 50, goose; 50 + 9 = 59, goose; 59 + 9 = 68 -> bounce.
+    // goose; 41 + 9 = 50, goose; 50 + 9 = 59, goose; 59 + 9 = 68 -> bounce to
+    // 58, which is La Mort, so the chain ends back on square 1.
     const { state, steps } = applyRoll(gameAt([5, 0]), [5, 4])
     const geese = steps.filter((s) => s.kind === 'goose')
     expect(geese.length).toBeGreaterThanOrEqual(5)
-    expect(state.positions[0]).toBe(63 - (68 - 63))
-    expect(steps.at(-1)).toEqual({ kind: 'bounce', from: 68, to: 58, overshoot: 5 })
+    expect(steps).toContainEqual({ kind: 'bounce', from: 68, to: 58, overshoot: 5 })
+    expect(state.positions[0]).toBe(1)
   })
 
   it('carries the raw destination on the goose step that overshoots', () => {
     // The bounce step, not the goose step, is what corrects 68 to 58. Every
     // step's `to` is the square the pawn sits on once that step has played.
     const { steps } = applyRoll(gameAt([5, 0]), [5, 4])
-    expect(steps.at(-2)).toEqual({ kind: 'goose', from: 59, to: 68, by: 9 })
+    expect(steps).toContainEqual({ kind: 'goose', from: 59, to: 68, by: 9 })
+    const bounceAt = steps.findIndex((s) => s.kind === 'bounce')
+    expect(steps[bounceAt - 1]).toEqual({ kind: 'goose', from: 59, to: 68, by: 9 })
   })
 
   it('does not trigger a goose after a rebound', () => {
@@ -47,7 +50,7 @@ describe('applyRoll, geese', () => {
     expect(state.positions[0]).toBe(59)
   })
 
-  it.skip('lets a goose chain feed a teleport square', () => {
+  it('lets a goose chain feed a teleport square', () => {
     // 4 + 1 = 5, a goose; 5 + 1 = 6, the bridge.
     const { steps } = applyRoll(gameAt([4, 0], { twoDice: false }), [1])
     expect(steps.map((s) => s.kind)).toEqual(['move', 'goose', 'bridge'])

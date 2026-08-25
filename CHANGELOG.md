@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.4.0](https://github.com/PixiBixi/goose-multiplayer/compare/040ddda18ba82f44279e1d18d2ee9ac339fa28e1..v0.4.0) - 2026-08-25
+#### Features
+- (**engine**) give every rule that fires a step of its own - ([040ddda](https://github.com/PixiBixi/goose-multiplayer/commit/040ddda18ba82f44279e1d18d2ee9ac339fa28e1)) - Jeremy Delgado
+- (**protocol**) hold the list of step kinds the wire carries - ([a1b6e47](https://github.com/PixiBixi/goose-multiplayer/commit/a1b6e47702cea8573f6c5427bb4bef386e57583a)) - Jeremy Delgado
+- (**web**) a rule card that says why, and a pawn that flies the spiral - ([7336e64](https://github.com/PixiBixi/goose-multiplayer/commit/7336e640b4593a2336d3c026057f262e237397bd)) - Jeremy Delgado
+#### Documentation
+- (**readme**) describe the rule cards and the flight - ([dc3622c](https://github.com/PixiBixi/goose-multiplayer/commit/dc3622c6e90f34ec5707959f63a0f633d34b4656)) - Jeremy Delgado
+
+- - -
+
 ## [v0.3.0](https://github.com/PixiBixi/goose-multiplayer/compare/ed18fff35eb8558c446e44d4d18a04ce2c585599..v0.3.0) - 2026-08-25
 #### Features
 - (**engine**) grant another roll on a double, capped at three - ([ed18fff](https://github.com/PixiBixi/goose-multiplayer/commit/ed18fff35eb8558c446e44d4d18a04ce2c585599)) - Jeremy Delgado

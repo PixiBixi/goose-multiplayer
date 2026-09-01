@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.1](https://github.com/PixiBixi/goose-multiplayer/compare/5b27093368605ae6cd50f5d4c5acdde078483ae1..v0.6.1) - 2026-09-01
+#### Documentation
+- (**security**) add a security policy - ([427e8d2](https://github.com/PixiBixi/goose-multiplayer/commit/427e8d2ced5aa1bd4fe3706158b31873cfa1dc6d)) - Jeremy Delgado
+#### Continuous Integration
+- (**hardening**) audit runner egress and maintain the pinned SHAs - ([5b27093](https://github.com/PixiBixi/goose-multiplayer/commit/5b27093368605ae6cd50f5d4c5acdde078483ae1)) - Jeremy Delgado
+- (**renovate**) move dependency updates from Dependabot to Renovate - ([7382a19](https://github.com/PixiBixi/goose-multiplayer/commit/7382a19a83719a822d16167377d46c67ddcd6722)) - Jeremy Delgado
+- (**renovate**) drop the config, Dependabot already owns this repo - ([ff7a97b](https://github.com/PixiBixi/goose-multiplayer/commit/ff7a97b8f8ab1fd8d4696318d33f129eb44b10e9)) - Jeremy Delgado
+#### Miscellaneous Chores
+- (**deps-dev**) bump @types/node in the dev-dependencies group (#1) - ([a361b2a](https://github.com/PixiBixi/goose-multiplayer/commit/a361b2a4a8a392948a5e3c8eb4ef1070b8fa91e4)) - dependabot[bot], dependabot[bot]
+
+- - -
+
 ## [v0.6.0](https://github.com/PixiBixi/goose-multiplayer/compare/b26a2bd76b14d63933c04a0a8d760d23aa74bd21..v0.6.0) - 2026-08-25
 #### Features
 - (**protocol**) carry the running server version in every view - ([5b3d326](https://github.com/PixiBixi/goose-multiplayer/commit/5b3d32684171dfd0f23e06c519c51d5ce89c7f94)) - Jeremy Delgado

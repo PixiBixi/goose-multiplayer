@@ -11,7 +11,7 @@
 #   docker compose -f compose.traefik.yaml -f e2e/compose.e2e.yaml up --build -d
 services:
   traefik:
-    image: traefik:v3.7
+    image: traefik:v3.7@sha256:9c2a54d87f76f5c2f5f2682c68394af92fb12c0a2686798d6462a3f84bd78eaf
     command:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false

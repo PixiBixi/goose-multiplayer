@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.3](https://github.com/PixiBixi/goose-multiplayer/compare/7a519a0ef2edbf16efa8f43b53e5eb40a1c34d0c..v0.6.3) - 2026-09-03
+#### Miscellaneous Chores
+- (**deps**) pin dependencies - ([7a519a0](https://github.com/PixiBixi/goose-multiplayer/commit/7a519a0ef2edbf16efa8f43b53e5eb40a1c34d0c)) - renovate[bot]
+
+- - -
+
 ## [v0.6.2](https://github.com/PixiBixi/goose-multiplayer/compare/efbcfb3ec1f8b0e4e10a8c360d73183c7f3032da..v0.6.2) - 2026-09-02
 #### Miscellaneous Chores
 - (**codeowners**) declare a single owner for every path - ([efbcfb3](https://github.com/PixiBixi/goose-multiplayer/commit/efbcfb3ec1f8b0e4e10a8c360d73183c7f3032da)) - Jeremy Delgado

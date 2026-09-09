@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.7](https://github.com/PixiBixi/goose-multiplayer/compare/82c0100cd6948207c2dcf09dcd691510e510adab..v0.6.7) - 2026-09-09
+#### Miscellaneous Chores
+- (**deps**) update dependency eslint to v10.10.0 - ([6e3d404](https://github.com/PixiBixi/goose-multiplayer/commit/6e3d4040c4bed14ab58cec5b088a66a497f01d6b)) - renovate[bot]
+- (**deps**) update traefik:v3.7 docker digest to f86a2ca - ([82c0100](https://github.com/PixiBixi/goose-multiplayer/commit/82c0100cd6948207c2dcf09dcd691510e510adab)) - renovate[bot]
+
+- - -
+
 ## [v0.6.6](https://github.com/PixiBixi/goose-multiplayer/compare/9acfcc8ef726ab7bb7485509a059e19a8564179f..v0.6.6) - 2026-09-07
 #### Miscellaneous Chores
 - (**deps**) update dependency @types/node to v26.4.1 (#10) - ([9acfcc8](https://github.com/PixiBixi/goose-multiplayer/commit/9acfcc8ef726ab7bb7485509a059e19a8564179f)) - renovate[bot], renovate[bot]

@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.11](https://github.com/PixiBixi/goose-multiplayer/compare/39f47efbbe90e7f7075b5cc22f2138211a6206ec..v0.6.11) - 2026-09-13
+#### Miscellaneous Chores
+- (**deps**) update dependency typescript-eslint to v8.70.0 (#17) - ([39f47ef](https://github.com/PixiBixi/goose-multiplayer/commit/39f47efbbe90e7f7075b5cc22f2138211a6206ec)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.10](https://github.com/PixiBixi/goose-multiplayer/compare/bc04ef84933d4191e09f3e365eb07ac84f379c42..v0.6.10) - 2026-09-12
 #### Miscellaneous Chores
 - (**deps**) update dependency @types/node to v26.5.0 - ([bc04ef8](https://github.com/PixiBixi/goose-multiplayer/commit/bc04ef84933d4191e09f3e365eb07ac84f379c42)) - renovate[bot]

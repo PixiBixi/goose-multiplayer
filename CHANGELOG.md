@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.20](https://github.com/PixiBixi/goose-multiplayer/compare/e0a32351a8c91221a861600e181df4fc5eae53da..v0.6.20) - 2026-09-21
+#### Miscellaneous Chores
+- (**deps**) update docker/setup-buildx-action action to v4.4.1 (#27) - ([221e5a6](https://github.com/PixiBixi/goose-multiplayer/commit/221e5a6676e728ac87b1cf26af71171e20b2d5a5)) - renovate[bot]
+- (**deps**) update dependency prettier to v3.9.7 (#26) - ([e0a3235](https://github.com/PixiBixi/goose-multiplayer/commit/e0a32351a8c91221a861600e181df4fc5eae53da)) - renovate[bot]
+
+- - -
+
 ## [v0.6.19](https://github.com/PixiBixi/goose-multiplayer/compare/58191e219dba411d197bd93e65be041634194b47..v0.6.19) - 2026-09-21
 #### Miscellaneous Chores
 - (**deps**) update dev-dependencies (#25) - ([58191e2](https://github.com/PixiBixi/goose-multiplayer/commit/58191e219dba411d197bd93e65be041634194b47)) - renovate[bot], renovate[bot]

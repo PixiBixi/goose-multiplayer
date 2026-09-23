@@ -98,6 +98,18 @@ version que la CI lint, couvre et joue au navigateur. `scripts/check-node-versio
 remplacements à faire, aucun mapping `ports:` et le réseau en `external: true`.
 Publier 5050 sur l'hôte ouvrirait une entrée en HTTP clair qui contourne TLS.
 
+Le serveur n'accepte une connexion navigateur que si son `Origin` correspond au
+`Host` reçu. Traefik transmet le `Host` d'origine par défaut (`passHostHeader`) ;
+si un proxy le réécrit, renseigner `CORS_ORIGIN` avec l'origine publique exacte,
+sans slash final.
+
+| Variable      | Défaut  | Rôle                                                 |
+| ------------- | ------- | ---------------------------------------------------- |
+| `PORT`        | `5050`  | Port d'écoute                                        |
+| `BEHIND_TLS`  | `false` | `true` derrière Traefik                              |
+| `CORS_ORIGIN` | vide    | Origine supplémentaire autorisée (CORS et handshake) |
+| `LOG_LEVEL`   | `info`  | `debug`, `info`, `warn` ou `error`                   |
+
 Les tables vivent en mémoire : ne jamais dépasser une réplique. Deux répliques
 en tiendraient chacune la moitié sans que l'une connaisse l'autre.
 

@@ -51,9 +51,12 @@ export class Room {
 
   join(name: string, sessionId: string): Seat {
     if (this.phase !== 'lobby') throw new Error('cannot join: the game has already started')
-    if (this.#members.length >= MAX_SEATS) throw new Error('the room is full')
-    const seat = this.#members.length
-    this.#members.push({ name, sessionId, presence: 'active' })
+    /* A seat left in the lobby is handed on: nothing has been played yet, so
+       seat == engine index holds, and keeping it let departures fill the table. */
+    const vacant = this.#members.findIndex((member) => member.presence === 'left')
+    if (vacant === -1 && this.#members.length >= MAX_SEATS) throw new Error('the room is full')
+    const seat = vacant === -1 ? this.#members.length : vacant
+    this.#members[seat] = { name, sessionId, presence: 'active' }
     return seat
   }
 

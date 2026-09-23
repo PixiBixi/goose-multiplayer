@@ -81,6 +81,8 @@ export class RoomManager {
   join(code: string, name: string, sessionId: string): Seat {
     const entry = this.#require(code)
     const seat = entry.room.join(name, sessionId)
+    // A reused seat's old session must not reconnect into it.
+    for (const [session, held] of entry.sessions) if (held === seat) entry.sessions.delete(session)
     entry.sessions.set(sessionId, seat)
     this.#deps.onView(code)
     return seat

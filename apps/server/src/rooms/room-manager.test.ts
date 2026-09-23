@@ -79,6 +79,16 @@ describe('RoomManager', () => {
     expect(room?.view(0).lastTurn).not.toBeNull()
   })
 
+  it('forgets the session of a lobby seat once somebody else takes it', () => {
+    // Otherwise the player who left could come back through reconnect and take it over.
+    const { m } = manager()
+    const code = m.create('a', 's0')
+    m.join(code, 'b', 's1')
+    m.leave(code, 1)
+    expect(m.join(code, 'c', 's2')).toBe(1)
+    expect(() => m.reconnect(code, 's1')).toThrow(/no seat/i)
+  })
+
   it('publishes a view after every state change', () => {
     const { m, onView } = manager()
     const code = m.create('a', 's0')

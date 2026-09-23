@@ -25,6 +25,37 @@ describe('Room, lobby', () => {
     expect(r.seatCount).toBe(6)
   })
 
+  it('hands the host role to the next seated player when the host leaves', () => {
+    // Otherwise nobody left in the lobby can change the rules or start.
+    const r = room()
+    r.join('a', 's0')
+    r.join('b', 's1')
+    r.join('c', 's2')
+    r.leave(0)
+    expect(r.hostSeat).toBe(1)
+    expect(() => r.start(1)).not.toThrow()
+  })
+
+  it('hands it on when the host drops, and does not hand it back', () => {
+    const r = room()
+    r.join('a', 's0')
+    r.join('b', 's1')
+    r.setPresence(0, 'disconnected')
+    expect(r.hostSeat).toBe(1)
+    r.setPresence(0, 'active')
+    expect(r.hostSeat).toBe(1)
+  })
+
+  it('gives it to whoever sits down at a table nobody is left at', () => {
+    const r = room()
+    r.join('a', 's0')
+    r.join('b', 's1')
+    r.setPresence(1, 'disconnected')
+    r.setPresence(0, 'disconnected')
+    r.setPresence(1, 'active')
+    expect(r.hostSeat).toBe(1)
+  })
+
   it('lets the host change the rules before the start', () => {
     const r = room()
     r.join('host', 's0')

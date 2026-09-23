@@ -62,6 +62,7 @@ export class Room {
     if (vacant === -1 && this.#members.length >= MAX_SEATS) throw new Error('the room is full')
     const seat = vacant === -1 ? this.#members.length : vacant
     this.#members[seat] = { name, sessionId, presence: 'active' }
+    this.#ensureHost()
     return seat
   }
 
@@ -75,6 +76,7 @@ export class Room {
     const member = this.#members[seat]
     if (!member) throw new Error(`no seat ${seat} in this room`)
     member.presence = presence
+    this.#ensureHost()
   }
 
   configure(seat: Seat, patch: Partial<TableConfig>): void {
@@ -139,6 +141,15 @@ export class Room {
       },
       seat,
     )
+  }
+
+  /* The host alone can configure and start, so an absent host froze the lobby.
+     Moved to the lowest active seat, and not handed back: a reload must not
+     yank it from whoever is running the table now. Kept if nobody is active. */
+  #ensureHost(): void {
+    if (this.#members[this.#hostSeat]?.presence === 'active') return
+    const next = this.#members.findIndex((member) => member.presence === 'active')
+    if (next !== -1) this.#hostSeat = next
   }
 
   #assertSeat(seat: Seat): void {

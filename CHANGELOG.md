@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.23](https://github.com/PixiBixi/goose-multiplayer/compare/1f41aff72f4e48e20d544cd12787e5619099c084..v0.6.23) - 2026-09-23
+#### Bug Fixes
+- (**server**) hand the host role on when the host is gone (#30) - ([1f41aff](https://github.com/PixiBixi/goose-multiplayer/commit/1f41aff72f4e48e20d544cd12787e5619099c084)) - Jérémy
+
+- - -
+
 ## [v0.6.22](https://github.com/PixiBixi/goose-multiplayer/compare/2173c41e73dbbd5295e289a2f11eaf39d395c76f..v0.6.22) - 2026-09-23
 #### Bug Fixes
 - (**server**) bugs ported from the uno code review (#29) - ([2173c41](https://github.com/PixiBixi/goose-multiplayer/commit/2173c41e73dbbd5295e289a2f11eaf39d395c76f)) - Jérémy

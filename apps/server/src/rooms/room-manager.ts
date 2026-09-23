@@ -13,10 +13,13 @@ export type ManagerDeps = {
   clock: Clock
   rng: Rng
   onView: (code: string) => void
+  /** Rooms held at once. Nothing else bounds them: a script opening new sockets escapes the rate limit. */
+  maxRooms?: number
 }
 
 export const TURN_TIMEOUT_MS = 60_000
 export const DISCONNECT_GRACE_MS = 90_000
+export const MAX_ROOMS = 500
 
 type Entry = {
   room: Room
@@ -63,6 +66,8 @@ export class RoomManager {
   }
 
   create(name: string, sessionId: string): string {
+    if (this.#rooms.size >= (this.#deps.maxRooms ?? MAX_ROOMS))
+      throw new Error('the server is full')
     let code = makeRoomCode(this.#codeRng)
     while (this.#rooms.has(code)) code = makeRoomCode(this.#codeRng)
     const room = new Room(code)
@@ -81,6 +86,8 @@ export class RoomManager {
   join(code: string, name: string, sessionId: string): Seat {
     const entry = this.#require(code)
     const seat = entry.room.join(name, sessionId)
+    // A reused seat's old session must not reconnect into it.
+    for (const [session, held] of entry.sessions) if (held === seat) entry.sessions.delete(session)
     entry.sessions.set(sessionId, seat)
     this.#deps.onView(code)
     return seat
@@ -89,6 +96,17 @@ export class RoomManager {
   start(code: string, seat: Seat): void {
     const entry = this.#require(code)
     entry.room.start(seat)
+    this.#skipLeftSeats(entry)
+    this.#armTurnTimer(code, entry)
+    this.#deps.onView(code)
+  }
+
+  /* Through the manager, not the room, so the new game gets a turn clock: the
+     old one stopped arming when the last game ended. */
+  restart(code: string, seat: Seat): void {
+    const entry = this.#require(code)
+    entry.room.restart(seat)
+    this.#clearTurnTimer(entry)
     this.#skipLeftSeats(entry)
     this.#armTurnTimer(code, entry)
     this.#deps.onView(code)
@@ -108,6 +126,7 @@ export class RoomManager {
 
   disconnect(code: string, seat: Seat): void {
     const entry = this.#require(code)
+    this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'disconnected')
     const timer = this.#deps.clock.setTimeout(() => this.#expire(code, seat), DISCONNECT_GRACE_MS)
     entry.graceTimers.set(seat, timer)
@@ -118,14 +137,17 @@ export class RoomManager {
     const entry = this.#require(code)
     const seat = entry.sessions.get(sessionId)
     if (seat === undefined) throw new Error('no seat for this session in this room')
-    const grace = entry.graceTimers.get(seat)
-    if (grace !== undefined) {
-      this.#deps.clock.clearTimeout(grace)
-      entry.graceTimers.delete(seat)
-    }
+    this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'active')
     this.#deps.onView(code)
     return seat
+  }
+
+  /* Given up on purpose, so no grace: nobody is coming back to it. */
+  leave(code: string, seat: Seat): void {
+    const entry = this.#require(code)
+    this.#clearGrace(entry, seat)
+    this.#markLeft(code, entry, seat)
   }
 
   get(code: string): Room | undefined {
@@ -152,13 +174,37 @@ export class RoomManager {
     const entry = this.#rooms.get(code)
     if (!entry) return
     entry.graceTimers.delete(seat)
+    this.#markLeft(code, entry, seat)
+  }
+
+  #markLeft(code: string, entry: Entry, seat: Seat): void {
     entry.room.setPresence(seat, 'left')
+    if (entry.room.abandoned) {
+      this.#drop(code, entry)
+      return
+    }
     if (entry.room.phase === 'playing' && entry.room.view(entry.room.hostSeat).turn.seat === seat) {
       this.#clearTurnTimer(entry)
       this.#skipLeftSeats(entry)
       this.#armTurnTimer(code, entry)
     }
     this.#deps.onView(code)
+  }
+
+  /* Rooms were never removed, so every table ever opened stayed in memory.
+     Only once nobody can come back: a disconnected seat still has its grace. */
+  #drop(code: string, entry: Entry): void {
+    this.#clearTurnTimer(entry)
+    for (const grace of entry.graceTimers.values()) this.#deps.clock.clearTimeout(grace)
+    entry.graceTimers.clear()
+    this.#rooms.delete(code)
+  }
+
+  #clearGrace(entry: Entry, seat: Seat): void {
+    const grace = entry.graceTimers.get(seat)
+    if (grace === undefined) return
+    this.#deps.clock.clearTimeout(grace)
+    entry.graceTimers.delete(seat)
   }
 
   /* The timer fired: the seat on turn did not act in time, so the manager

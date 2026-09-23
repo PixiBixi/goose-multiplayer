@@ -9,6 +9,14 @@ function started(): Room {
   return r
 }
 
+/* [1, 1] reaches the finish under the default config; see the win test below. */
+function finished(): Room {
+  const r = started()
+  for (let rolls = 0; r.phase !== 'over' && rolls < 400; rolls++)
+    r.roll(r.view(0).turn.seat, [1, 1])
+  return r
+}
+
 describe('Room, playing', () => {
   it('refuses a roll from a seat whose turn it is not', () => {
     expect(() => started().roll(1, [1, 1])).toThrow(/turn/i)
@@ -69,12 +77,26 @@ describe('Room, playing', () => {
   })
 
   it('restarts with the same seats and the same rules', () => {
-    const r = started()
-    r.roll(0, [1, 1])
-    r.restart(0)
+    const r = finished()
+    r.restart(1)
     expect(r.view(0).phase).toBe('playing')
     expect(r.view(0).seats.map((s) => s.position)).toEqual([0, 0])
     expect(r.view(0).lastTurn).toBeNull()
+  })
+
+  it('refuses a rematch while the game is still being played', () => {
+    // Any seat may ask for one, so mid-game it would let one player wipe everybody's board.
+    const r = started()
+    r.roll(0, [1, 1])
+    expect(() => r.restart(1)).toThrow(/not over/i)
+    expect(r.view(0).lastTurn).not.toBeNull()
+  })
+
+  it('refuses a second start once the game is under way', () => {
+    const r = started()
+    r.roll(0, [1, 1])
+    expect(() => r.start(0)).toThrow(/already started/i)
+    expect(r.view(0).lastTurn).not.toBeNull()
   })
 
   it('keeps the chat log bounded', () => {

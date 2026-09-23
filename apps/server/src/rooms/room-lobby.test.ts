@@ -16,6 +16,15 @@ describe('Room, lobby', () => {
     expect(() => r.join('p6', 's6')).toThrow(/full/i)
   })
 
+  it('hands a seat left in the lobby to the next joiner', () => {
+    const r = room()
+    for (let i = 0; i < 6; i++) r.join(`p${i}`, `s${i}`)
+    r.leave(2)
+    expect(r.join('late', 's-late')).toBe(2)
+    expect(r.view(2).you.name).toBe('late')
+    expect(r.seatCount).toBe(6)
+  })
+
   it('lets the host change the rules before the start', () => {
     const r = room()
     r.join('host', 's0')

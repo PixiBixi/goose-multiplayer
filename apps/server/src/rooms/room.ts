@@ -45,15 +45,23 @@ export class Room {
     return this.#members.length
   }
 
+  /** Nobody could come back: every seat has left for good. */
+  get abandoned(): boolean {
+    return this.#members.every((member) => member.presence === 'left')
+  }
+
   get lastTurn(): LastTurn {
     return this.#lastTurn
   }
 
   join(name: string, sessionId: string): Seat {
     if (this.phase !== 'lobby') throw new Error('cannot join: the game has already started')
-    if (this.#members.length >= MAX_SEATS) throw new Error('the room is full')
-    const seat = this.#members.length
-    this.#members.push({ name, sessionId, presence: 'active' })
+    /* A seat left in the lobby is handed on: nothing has been played yet, so
+       seat == engine index holds, and keeping it let departures fill the table. */
+    const vacant = this.#members.findIndex((member) => member.presence === 'left')
+    if (vacant === -1 && this.#members.length >= MAX_SEATS) throw new Error('the room is full')
+    const seat = vacant === -1 ? this.#members.length : vacant
+    this.#members[seat] = { name, sessionId, presence: 'active' }
     return seat
   }
 
@@ -81,6 +89,8 @@ export class Room {
   start(seat: Seat): void {
     this.#assertSeat(seat)
     if (seat !== this.#hostSeat) throw new Error('only the host can start the game')
+    // A rematch goes through restart: a second start would wipe a game in progress.
+    if (this.phase !== 'lobby') throw new Error('cannot start: the game has already started')
     if (this.#members.length < MIN_SEATS) throw new Error('need at least two seats to start')
     this.#game = createGame(this.#members.length, this.#config)
   }
@@ -100,6 +110,8 @@ export class Room {
   restart(seat: Seat): void {
     this.#assertSeat(seat)
     if (this.#game === null) throw new Error('the game has not started')
+    // Any seat may ask, so only once it is over: mid-game it would wipe everybody's board.
+    if (this.phase !== 'over') throw new Error('cannot restart: the game is not over')
     this.#game = restartGame(this.#game)
     this.#lastTurn = null
   }

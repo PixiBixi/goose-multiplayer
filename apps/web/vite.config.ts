@@ -14,7 +14,9 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   server: {
     proxy: {
-      '/socket.io': { target: SERVER, ws: true, changeOrigin: true },
+      /* Host left alone: the server accepts a handshake whose Origin matches
+         Host, and rewriting it to :5050 would refuse the dev page on :5173. */
+      '/socket.io': { target: SERVER, ws: true },
       '/healthz': { target: SERVER, changeOrigin: true },
     },
   },

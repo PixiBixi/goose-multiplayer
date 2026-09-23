@@ -4,8 +4,8 @@ import { useMemo } from 'react'
 import { t } from '../i18n/index.js'
 import { pathSquares, spiralPoints } from '../lib/board-layout.js'
 import { markFor } from '../lib/square-mark.js'
-import { BoardFlight } from './BoardFlight.js'
-import { initialOf, pawnsBySquare, type BoardProps } from './board-types.js'
+import type { BoardProps } from './board-types.js'
+import { Pawns } from './Pawns.js'
 import { SquareIconAt } from './SquareIcon.js'
 
 const SIZE = 600
@@ -19,7 +19,6 @@ const CENTRE = SIZE / 2
 
 export function BoardSpiral({ seats, highlight, flight = null }: BoardProps): JSX.Element {
   const points = useMemo(() => spiralPoints({ size: SIZE, cellRadius: CELL_RADIUS }), [])
-  const pawns = pawnsBySquare(seats)
   const garden = markFor(BOARD_SIZE)
 
   const centreOf = (square: number): { x: number; y: number } =>
@@ -30,7 +29,6 @@ export function BoardSpiral({ seats, highlight, flight = null }: BoardProps): JS
   /* The route a flight follows, square centre by square centre: the real
      spiral, not a straight line across the board between two squares that
      happen to sit near each other on the page. */
-  const flier = flight === null ? null : seats.find((seat) => seat.seat === flight.seat)
   const route = flight === null ? [] : pathSquares(flight.from, flight.to).map(centreOf)
 
   return (
@@ -158,67 +156,25 @@ export function BoardSpiral({ seats, highlight, flight = null }: BoardProps): JS
         {t('board.start').toUpperCase()}
       </text>
 
-      {[...pawns].flatMap(([square, sitting]) =>
-        sitting.map((seat, slot) => {
-          /* The seat in the air is drawn by the flight, not here: two copies
-             of the same pawn, one already parked on the destination, would
-             give the arrival away before the pawn had left. */
-          if (flight !== null && seat.seat === flight.seat) return null
+      <Pawns
+        seats={seats}
+        flight={flight}
+        radius={CELL_RADIUS * 0.56}
+        textY={CELL_RADIUS * 0.2}
+        fontSize={CELL_RADIUS * 0.54}
+        route={route}
+        positionOf={(square, slot, count) => {
           const base = centreOf(square)
           const angle = (-90 + slot * 58) * (Math.PI / 180)
           const offset = square === 0 ? CELL_RADIUS * 1.2 : CELL_RADIUS + 4
           const x =
             square === 0
-              ? CENTRE + (slot - (sitting.length - 1) / 2) * 34
+              ? CENTRE + (slot - (count - 1) / 2) * 34
               : base.x + Math.cos(angle) * offset
           const y = square === 0 ? START_Y : base.y + Math.sin(angle) * offset
-          return (
-            /* Keyed by seat, not by square: React then moves the same node
-               from one square to the next and the CSS transition has
-               something to animate. Keyed by square it is destroyed and
-               rebuilt, and the pawn teleports. */
-            <g
-              key={seat.seat}
-              className="pawn"
-              data-pawn={seat.seat}
-              transform={`translate(${x.toFixed(1)}, ${y.toFixed(1)})`}
-            >
-              <title>{`${seat.name}: ${square === 0 ? t('seat.atStart') : t('seat.atSquare', { square })}`}</title>
-              <circle
-                r={CELL_RADIUS * 0.56}
-                fill={seat.colour}
-                stroke="var(--ink)"
-                strokeWidth={2}
-                opacity={seat.presence === 'active' ? 1 : 0.55}
-              />
-              <text
-                y={CELL_RADIUS * 0.2}
-                textAnchor="middle"
-                fontFamily="var(--display)"
-                fontSize={CELL_RADIUS * 0.54}
-                fill="var(--paper-raised)"
-              >
-                {initialOf(seat.name)}
-              </text>
-            </g>
-          )
-        }),
-      )}
-
-      {flight !== null && flier ? (
-        <BoardFlight
-          /* Remounted per flight: the component owns a clock, and a new route
-             has to start it over rather than carry on from where the last one
-             got to. */
-          key={`${String(flight.seat)}:${String(flight.from)}:${String(flight.to)}`}
-          points={route}
-          colour={flier.colour}
-          initial={initialOf(flier.name)}
-          radius={CELL_RADIUS * 0.56}
-          durationMs={flight.durationMs}
-          label={`${flier.name}: ${t('seat.atSquare', { square: flight.to })}`}
-        />
-      ) : null}
+          return { x, y }
+        }}
+      />
     </svg>
   )
 }

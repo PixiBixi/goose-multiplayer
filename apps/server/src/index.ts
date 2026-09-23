@@ -5,6 +5,7 @@ import { loadConfig } from './config.js'
 import { createApp } from './http.js'
 import { createLogger } from './logger.js'
 import { RoomManager, systemClock } from './rooms/room-manager.js'
+import { isAllowedOrigin } from './security/origin.js'
 import { publishRoom, registerHandlers } from './sockets/handlers.js'
 
 const config = loadConfig(process.env)
@@ -12,7 +13,14 @@ const logger = createLogger(config.logLevel)
 const app = createApp()
 const httpServer = createServer(app)
 
-const io = new Server(httpServer, config.corsOrigin ? { cors: { origin: config.corsOrigin } } : {})
+const io = new Server(httpServer, {
+  ...(config.corsOrigin ? { cors: { origin: config.corsOrigin } } : {}),
+  allowRequest: (req, callback) => {
+    callback(null, isAllowedOrigin(req.headers.origin, req.headers.host, config.corsOrigin))
+  },
+  // Every client payload is under 1 KiB; the 1 MB default only helps a flood.
+  maxHttpBufferSize: 16 * 1024,
+})
 
 /* Every seat gets its own projection of the table (its own legal moves, its
    own "you"), so a state change is published by fetching whoever is

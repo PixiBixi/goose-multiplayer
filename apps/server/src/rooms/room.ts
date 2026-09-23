@@ -45,6 +45,11 @@ export class Room {
     return this.#members.length
   }
 
+  /** Nobody could come back: every seat has left for good. */
+  get abandoned(): boolean {
+    return this.#members.every((member) => member.presence === 'left')
+  }
+
   get lastTurn(): LastTurn {
     return this.#lastTurn
   }

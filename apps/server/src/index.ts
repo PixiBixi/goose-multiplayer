@@ -5,7 +5,7 @@ import { loadConfig } from './config.js'
 import { createApp } from './http.js'
 import { createLogger } from './logger.js'
 import { RoomManager, systemClock } from './rooms/room-manager.js'
-import { registerHandlers } from './sockets/handlers.js'
+import { publishRoom, registerHandlers } from './sockets/handlers.js'
 
 const config = loadConfig(process.env)
 const logger = createLogger(config.logLevel)
@@ -19,22 +19,12 @@ const io = new Server(httpServer, config.corsOrigin ? { cors: { origin: config.c
    actually sitting in that Socket.IO room and sending each their own view,
    not by broadcasting one shared payload. */
 function publishView(code: string): void {
-  const room = manager.get(code)
-  if (!room) return
-  io.in(code)
-    .fetchSockets()
-    .then((sockets) => {
-      for (const socket of sockets) {
-        const seat = (socket.data as { seat?: number }).seat
-        if (seat !== undefined) socket.emit('tableView', room.view(seat))
-      }
+  publishRoom(io, manager, code, (err: unknown) => {
+    logger.error('failed to publish table view', {
+      code,
+      error: err instanceof Error ? err.message : String(err),
     })
-    .catch((err: unknown) => {
-      logger.error('failed to publish table view', {
-        code,
-        error: err instanceof Error ? err.message : String(err),
-      })
-    })
+  })
 }
 
 const manager = new RoomManager({

@@ -48,21 +48,27 @@ function publish(socket: Socket, manager: RoomManager, code: string): void {
    reach the manager's onView, so answering only the socket that acted left
    the others staring at a table where nobody ever chatted, no rule ever
    changed and no rematch ever started. */
-function publishRoom(io: Server, manager: RoomManager, code: string): void {
+export function publishRoom(
+  io: Server,
+  manager: RoomManager,
+  code: string,
+  onError: (err: unknown) => void = () => undefined,
+): void {
   const room = manager.get(code)
   if (!room) return
   io.in(code)
     .fetchSockets()
     .then((sockets) => {
       for (const other of sockets) {
-        const seat = (other.data as Partial<SessionData>).seat
-        if (seat !== undefined) other.emit('tableView', room.view(seat))
+        const data = other.data as Partial<SessionData>
+        /* The seat is only meaningful at the table it was taken at: another
+           table's seat number made view() throw and cut everyone else off. */
+        if (data.code === code && data.seat !== undefined) {
+          other.emit('tableView', room.view(data.seat))
+        }
       }
     })
-    .catch(() => {
-      /* A failed fan-out is not worth killing the connection over: the next
-         action republishes, and the actor already has its own view. */
-    })
+    .catch(onError)
 }
 
 /* One socket.on per key of clientSchemas, so the wire and the handlers can
@@ -72,6 +78,44 @@ function publishRoom(io: Server, manager: RoomManager, code: string): void {
    connection silently, so every failure is emitted as an 'error' instead. */
 export function registerHandlers(io: Server, manager: RoomManager): void {
   const allow = makeRateLimiter({ ...RATE_LIMIT, clock: systemClock() })
+  /* `code:seat` -> the socket holding it. Only that socket may mark the seat
+     disconnected, or a closing first tab drops the seat a second tab now holds. */
+  const owners = new Map<string, string>()
+  const seatKey = (code: string, seat: number): string => `${code}:${seat}`
+
+  /* The seat's previous socket, when a second tab or a reload that overlapped
+     took it: it would otherwise keep acting as that seat. */
+  const evict = (socketId: string): void => {
+    const stale = io.sockets.sockets.get(socketId)
+    if (!stale) return
+    const data = stale.data as Partial<SessionData>
+    if (data.code !== undefined) stale.leave(data.code)
+    stale.data = {}
+    stale.disconnect(true)
+  }
+
+  const sit = (socket: Socket, code: string, seatIndex: number): void => {
+    const key = seatKey(code, seatIndex)
+    const previous = owners.get(key)
+    owners.set(key, socket.id)
+    socket.data = { code, seat: seatIndex }
+    socket.join(code)
+    if (previous !== undefined && previous !== socket.id) evict(previous)
+  }
+
+  /* Gives up whatever seat this socket holds. Silent when it holds none, so it
+     is safe before taking a seat anywhere. */
+  const release = (socket: Socket): void => {
+    const data = socket.data as Partial<SessionData>
+    if (data.code === undefined || data.seat === undefined) return
+    const key = seatKey(data.code, data.seat)
+    if (owners.get(key) === socket.id) {
+      owners.delete(key)
+      manager.leave(data.code, data.seat)
+    }
+    socket.leave(data.code)
+    socket.data = {}
+  }
 
   io.on('connection', (socket: Socket) => {
     const guard = (): boolean => {
@@ -105,9 +149,9 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
         return
       }
       run('create', () => {
+        release(socket)
         const code = manager.create(parsed.data.name, parsed.data.session)
-        socket.data = { code, seat: 0 }
-        socket.join(code)
+        sit(socket, code, 0)
         publish(socket, manager, code)
       })
     })
@@ -121,9 +165,9 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       }
       run('join', () => {
         const { code, name, session } = parsed.data
-        const seat = takeSeat(manager, code, name, session)
-        socket.data = { code, seat }
-        socket.join(code)
+        // Walking to another table gives the old seat up; rejoining this one does not.
+        if ((socket.data as Partial<SessionData>).code !== code) release(socket)
+        sit(socket, code, takeSeat(manager, code, name, session))
         publish(socket, manager, code)
       })
     })
@@ -204,10 +248,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       const session = requireSeat()
       if (!session) return
       run('leave', () => {
-        manager.get(session.code)?.leave(session.seat)
-        publishRoom(io, manager, session.code)
-        socket.leave(session.code)
-        socket.data = {}
+        release(socket)
       })
     })
 
@@ -239,10 +280,12 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
     })
 
     socket.on('disconnect', () => {
-      const data = socket.data as Partial<SessionData>
-      if (data.code !== undefined && data.seat !== undefined) {
-        manager.disconnect(data.code, data.seat)
-      }
+      const { code, seat } = socket.data as Partial<SessionData>
+      if (code === undefined || seat === undefined) return
+      const key = seatKey(code, seat)
+      if (owners.get(key) !== socket.id) return
+      owners.delete(key)
+      run('disconnect', () => manager.disconnect(code, seat))
     })
   })
 }

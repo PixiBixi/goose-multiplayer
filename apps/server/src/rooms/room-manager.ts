@@ -119,6 +119,7 @@ export class RoomManager {
 
   disconnect(code: string, seat: Seat): void {
     const entry = this.#require(code)
+    this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'disconnected')
     const timer = this.#deps.clock.setTimeout(() => this.#expire(code, seat), DISCONNECT_GRACE_MS)
     entry.graceTimers.set(seat, timer)
@@ -129,14 +130,17 @@ export class RoomManager {
     const entry = this.#require(code)
     const seat = entry.sessions.get(sessionId)
     if (seat === undefined) throw new Error('no seat for this session in this room')
-    const grace = entry.graceTimers.get(seat)
-    if (grace !== undefined) {
-      this.#deps.clock.clearTimeout(grace)
-      entry.graceTimers.delete(seat)
-    }
+    this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'active')
     this.#deps.onView(code)
     return seat
+  }
+
+  /* Given up on purpose, so no grace: nobody is coming back to it. */
+  leave(code: string, seat: Seat): void {
+    const entry = this.#require(code)
+    this.#clearGrace(entry, seat)
+    this.#markLeft(code, entry, seat)
   }
 
   get(code: string): Room | undefined {
@@ -163,6 +167,10 @@ export class RoomManager {
     const entry = this.#rooms.get(code)
     if (!entry) return
     entry.graceTimers.delete(seat)
+    this.#markLeft(code, entry, seat)
+  }
+
+  #markLeft(code: string, entry: Entry, seat: Seat): void {
     entry.room.setPresence(seat, 'left')
     if (entry.room.phase === 'playing' && entry.room.view(entry.room.hostSeat).turn.seat === seat) {
       this.#clearTurnTimer(entry)
@@ -170,6 +178,13 @@ export class RoomManager {
       this.#armTurnTimer(code, entry)
     }
     this.#deps.onView(code)
+  }
+
+  #clearGrace(entry: Entry, seat: Seat): void {
+    const grace = entry.graceTimers.get(seat)
+    if (grace === undefined) return
+    this.#deps.clock.clearTimeout(grace)
+    entry.graceTimers.delete(seat)
   }
 
   /* The timer fired: the seat on turn did not act in time, so the manager

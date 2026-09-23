@@ -6,6 +6,7 @@ import { createApp } from './http.js'
 import { createLogger } from './logger.js'
 import { RoomManager, systemClock } from './rooms/room-manager.js'
 import { isAllowedOrigin } from './security/origin.js'
+import { createShutdown } from './shutdown.js'
 import { publishRoom, registerHandlers } from './sockets/handlers.js'
 
 const config = loadConfig(process.env)
@@ -46,3 +47,14 @@ registerHandlers(io, manager)
 httpServer.listen(config.port, () => {
   logger.info(`listening on port ${config.port}`, { behindTls: config.behindTls })
 })
+
+const shutdown = createShutdown({
+  // Also closes the HTTP server it is attached to.
+  close: () => io.close(),
+  exit: (code) => process.exit(code),
+  logError: (message, meta) => logger.error(message, meta),
+  setTimer: (fn, ms) => setTimeout(fn, ms),
+})
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => void shutdown(signal))
+}

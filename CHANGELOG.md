@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.22](https://github.com/PixiBixi/goose-multiplayer/compare/2173c41e73dbbd5295e289a2f11eaf39d395c76f..v0.6.22) - 2026-09-23
+#### Bug Fixes
+- (**server**) bugs ported from the uno code review (#29) - ([2173c41](https://github.com/PixiBixi/goose-multiplayer/commit/2173c41e73dbbd5295e289a2f11eaf39d395c76f)) - Jérémy
+
+- - -
+
 ## [v0.6.21](https://github.com/PixiBixi/goose-multiplayer/compare/289bc3d33ce96602a2fa7ddc9b35aed75e9fe812..v0.6.21) - 2026-09-23
 #### Miscellaneous Chores
 - (**deps**) update dependency prettier to v3.9.8 (#28) - ([289bc3d](https://github.com/PixiBixi/goose-multiplayer/commit/289bc3d33ce96602a2fa7ddc9b35aed75e9fe812)) - renovate[bot], renovate[bot]

@@ -81,6 +81,8 @@ export class Room {
   start(seat: Seat): void {
     this.#assertSeat(seat)
     if (seat !== this.#hostSeat) throw new Error('only the host can start the game')
+    // A rematch goes through restart: a second start would wipe a game in progress.
+    if (this.phase !== 'lobby') throw new Error('cannot start: the game has already started')
     if (this.#members.length < MIN_SEATS) throw new Error('need at least two seats to start')
     this.#game = createGame(this.#members.length, this.#config)
   }
@@ -100,6 +102,8 @@ export class Room {
   restart(seat: Seat): void {
     this.#assertSeat(seat)
     if (this.#game === null) throw new Error('the game has not started')
+    // Any seat may ask, so only once it is over: mid-game it would wipe everybody's board.
+    if (this.phase !== 'over') throw new Error('cannot restart: the game is not over')
     this.#game = restartGame(this.#game)
     this.#lastTurn = null
   }

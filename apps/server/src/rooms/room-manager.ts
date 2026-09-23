@@ -94,6 +94,17 @@ export class RoomManager {
     this.#deps.onView(code)
   }
 
+  /* Through the manager, not the room, so the new game gets a turn clock: the
+     old one stopped arming when the last game ended. */
+  restart(code: string, seat: Seat): void {
+    const entry = this.#require(code)
+    entry.room.restart(seat)
+    this.#clearTurnTimer(entry)
+    this.#skipLeftSeats(entry)
+    this.#armTurnTimer(code, entry)
+    this.#deps.onView(code)
+  }
+
   /* A roll that actually happens in time needs no further enforcement: it
      proves someone is at the table. It only rearms a timer if the seat it
      hands off to turns out to be 'left', in which case nobody will ever roll

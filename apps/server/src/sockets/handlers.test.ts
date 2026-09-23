@@ -177,7 +177,7 @@ describe('handlers', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    // chat, configureTable, leaveRoom and restart never reach the manager, so
+    // chat, configureTable and leaveRoom never reach the manager, so
     // they never trigger its onView: answering only the socket that acted left
     // everyone else on a table where nobody ever said anything.
     expect(lastView(host).chat.map((line) => line.text)).toEqual(['bien joué'])

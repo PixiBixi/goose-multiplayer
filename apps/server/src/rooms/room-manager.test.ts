@@ -63,6 +63,22 @@ describe('RoomManager', () => {
     expect(m.get(code)?.view(0).lastTurn?.dice).toEqual(after?.dice)
   })
 
+  it('arms the turn clock again after a rematch', () => {
+    const { m, clock } = manager()
+    const code = m.create('a', 's0')
+    m.join(code, 'b', 's1')
+    m.start(code, 0)
+    const room = m.get(code)
+    for (let rolls = 0; room?.phase !== 'over' && rolls < 400; rolls++) {
+      m.roll(code, room?.view(0).turn.seat ?? 0)
+    }
+    m.restart(code, 1)
+    expect(room?.phase).toBe('playing')
+
+    clock.advance(TURN_TIMEOUT_MS)
+    expect(room?.view(0).lastTurn).not.toBeNull()
+  })
+
   it('publishes a view after every state change', () => {
     const { m, onView } = manager()
     const code = m.create('a', 's0')

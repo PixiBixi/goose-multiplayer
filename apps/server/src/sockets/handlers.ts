@@ -221,8 +221,8 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       const session = requireSeat()
       if (!session) return
       run('restart', () => {
-        manager.get(session.code)?.restart(session.seat)
-        publishRoom(io, manager, session.code)
+        manager.restart(session.code, session.seat)
+        publish(socket, manager, session.code)
       })
     })
 

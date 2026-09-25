@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.24](https://github.com/PixiBixi/goose-multiplayer/compare/193bf1f8f6df0f27f9221391d41116d3fcf2f136..v0.6.24) - 2026-09-25
+#### Refactoring
+- (**web**) tooling pass, shared pawn rendering and dependency hygiene (#31) - ([193bf1f](https://github.com/PixiBixi/goose-multiplayer/commit/193bf1f8f6df0f27f9221391d41116d3fcf2f136)) - Jérémy
+#### Miscellaneous Chores
+- (**deps**) update dev-dependencies (#32) - ([9865248](https://github.com/PixiBixi/goose-multiplayer/commit/98652489260068ffd6eb40c7ce458803e944593a)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.23](https://github.com/PixiBixi/goose-multiplayer/compare/1f41aff72f4e48e20d544cd12787e5619099c084..v0.6.23) - 2026-09-23
 #### Bug Fixes
 - (**server**) hand the host role on when the host is gone (#30) - ([1f41aff](https://github.com/PixiBixi/goose-multiplayer/commit/1f41aff72f4e48e20d544cd12787e5619099c084)) - Jérémy

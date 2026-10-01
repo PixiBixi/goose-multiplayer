@@ -6,7 +6,7 @@
 # scripts/check-node-versions.sh fails the build when these lines and .nvmrc disagree.
 
 # ---- build ----
-FROM node:26-alpine@sha256:ef24c5053d50fdc3e4e56eb4e7ddb7861874ab0fdc797046ba897581deb8e868 AS build
+FROM node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS build
 WORKDIR /app
 
 # Manifests first: the dependency layer then survives source-only changes.
@@ -38,7 +38,7 @@ RUN find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete \
 RUN npm prune --omit=dev
 
 # ---- runtime ----
-FROM node:26-alpine@sha256:ef24c5053d50fdc3e4e56eb4e7ddb7861874ab0fdc797046ba897581deb8e868 AS runtime
+FROM node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \

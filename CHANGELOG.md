@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.33](https://github.com/PixiBixi/goose-multiplayer/compare/135c40622ef0c81bc70f5a8d3197fd8a04ef2477..v0.6.33) - 2026-10-09
+#### Miscellaneous Chores
+- (**deps**) update dependency jsdom to v30.1.2 (#44) - ([135c406](https://github.com/PixiBixi/goose-multiplayer/commit/135c40622ef0c81bc70f5a8d3197fd8a04ef2477)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.32](https://github.com/PixiBixi/goose-multiplayer/compare/10b0931aee926b4f5f8251b1ab5da3252c40fe74..v0.6.32) - 2026-10-08
 #### Miscellaneous Chores
 - (**deps**) update dependency eslint to v10.12.0 (#43) - ([10b0931](https://github.com/PixiBixi/goose-multiplayer/commit/10b0931aee926b4f5f8251b1ab5da3252c40fe74)) - renovate[bot], renovate[bot]

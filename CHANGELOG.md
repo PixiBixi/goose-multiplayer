@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.37](https://github.com/PixiBixi/goose-multiplayer/compare/153c91dbc4027f580dbd0cf73e4f5c1974addca7..v0.6.37) - 2026-10-13
+#### Miscellaneous Chores
+- (**deps**) update dependency @playwright/test to v1.64.0 (#49) - ([153c91d](https://github.com/PixiBixi/goose-multiplayer/commit/153c91dbc4027f580dbd0cf73e4f5c1974addca7)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.36](https://github.com/PixiBixi/goose-multiplayer/compare/94d8444acba3414a89ed9aa1279cc536a9c5504e..v0.6.36) - 2026-10-11
 #### Miscellaneous Chores
 - (**deps**) update step-security/harden-runner action to v2.22.0 (#47) - ([94d8444](https://github.com/PixiBixi/goose-multiplayer/commit/94d8444acba3414a89ed9aa1279cc536a9c5504e)) - renovate[bot], renovate[bot]

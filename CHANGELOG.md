@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.39](https://github.com/PixiBixi/goose-multiplayer/compare/9e08ec59a8d7e93fe9d9ee576d4b1fd6fe77b91a..v0.6.39) - 2026-10-14
+#### Miscellaneous Chores
+- (**deps**) update dependency @types/node to v26.6.5 (#50) - ([9e08ec5](https://github.com/PixiBixi/goose-multiplayer/commit/9e08ec59a8d7e93fe9d9ee576d4b1fd6fe77b91a)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.38](https://github.com/PixiBixi/goose-multiplayer/compare/f8bf0831e0defabcda0ca34d650916bf999b3d28..v0.6.38) - 2026-10-13
 #### Miscellaneous Chores
 - (**deps**) update github-actions (#48) - ([f8bf083](https://github.com/PixiBixi/goose-multiplayer/commit/f8bf0831e0defabcda0ca34d650916bf999b3d28)) - renovate[bot], renovate[bot]

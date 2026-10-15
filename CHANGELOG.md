@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.40](https://github.com/PixiBixi/goose-multiplayer/compare/e8d2946930bf97a58f84331a771e2c535e4fa9fc..v0.6.40) - 2026-10-15
+#### Miscellaneous Chores
+- (**deps**) update dependency prettier to v3.9.10 (#51) - ([e8d2946](https://github.com/PixiBixi/goose-multiplayer/commit/e8d2946930bf97a58f84331a771e2c535e4fa9fc)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.39](https://github.com/PixiBixi/goose-multiplayer/compare/9e08ec59a8d7e93fe9d9ee576d4b1fd6fe77b91a..v0.6.39) - 2026-10-14
 #### Miscellaneous Chores
 - (**deps**) update dependency @types/node to v26.6.5 (#50) - ([9e08ec5](https://github.com/PixiBixi/goose-multiplayer/commit/9e08ec59a8d7e93fe9d9ee576d4b1fd6fe77b91a)) - renovate[bot], renovate[bot]

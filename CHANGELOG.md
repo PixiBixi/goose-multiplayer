@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.43](https://github.com/PixiBixi/goose-multiplayer/compare/a0755fcdddef68d8558f0cdcc8d9ed389eec5f86..v0.6.43) - 2026-10-20
+#### Miscellaneous Chores
+- (**deps**) update zizmorcore/zizmor-action action to v0.7.0 (#55) - ([a0755fc](https://github.com/PixiBixi/goose-multiplayer/commit/a0755fcdddef68d8558f0cdcc8d9ed389eec5f86)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.42](https://github.com/PixiBixi/goose-multiplayer/compare/0610052d65b94d05a4204ea56dce9393e5e5dee8..v0.6.42) - 2026-10-18
 #### Miscellaneous Chores
 - (**deps**) update dependency typescript-eslint to v8.71.2 (#53) - ([0610052](https://github.com/PixiBixi/goose-multiplayer/commit/0610052d65b94d05a4204ea56dce9393e5e5dee8)) - renovate[bot], renovate[bot]

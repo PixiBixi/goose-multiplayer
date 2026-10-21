@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.46](https://github.com/PixiBixi/goose-multiplayer/compare/3555022ee8b943cb9692d6f4431af85a4969a936..v0.6.46) - 2026-10-21
+#### Bug Fixes
+- (**deps**) refresh lockfile for transitive security fixes - ([3555022](https://github.com/PixiBixi/goose-multiplayer/commit/3555022ee8b943cb9692d6f4431af85a4969a936)) - Jeremy Delgado
+#### Miscellaneous Chores
+- (**renovate**) automerge lock file maintenance, release digests without timestamp - ([da8e061](https://github.com/PixiBixi/goose-multiplayer/commit/da8e061385f664adf1194aeb587fd4d91085ae1e)) - Jeremy Delgado
+
+- - -
+
 ## [v0.6.45](https://github.com/PixiBixi/goose-multiplayer/compare/e07f3dd67da8a3c7761d32cfd44405ea622b95dc..v0.6.45) - 2026-10-21
 #### Miscellaneous Chores
 - (**renovate**) raise security PRs from OSV advisories - ([e07f3dd](https://github.com/PixiBixi/goose-multiplayer/commit/e07f3dd67da8a3c7761d32cfd44405ea622b95dc)) - Jeremy Delgado

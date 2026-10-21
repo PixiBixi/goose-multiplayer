@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.47](https://github.com/PixiBixi/goose-multiplayer/compare/9eb870fb9232d16fccbbea82959c61aaed68c66e..v0.6.47) - 2026-10-21
+#### Miscellaneous Chores
+- (**deps**) update dependency ubuntu to v26 (#56) - ([9eb870f](https://github.com/PixiBixi/goose-multiplayer/commit/9eb870fb9232d16fccbbea82959c61aaed68c66e)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.46](https://github.com/PixiBixi/goose-multiplayer/compare/3555022ee8b943cb9692d6f4431af85a4969a936..v0.6.46) - 2026-10-21
 #### Bug Fixes
 - (**deps**) refresh lockfile for transitive security fixes - ([3555022](https://github.com/PixiBixi/goose-multiplayer/commit/3555022ee8b943cb9692d6f4431af85a4969a936)) - Jeremy Delgado

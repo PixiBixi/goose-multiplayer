@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.49](https://github.com/PixiBixi/goose-multiplayer/compare/fe6ca2607af72f8334d228b49b3b13b1b89963a2..v0.6.49) - 2026-10-25
+#### Continuous Integration
+- (**release**) serialize release runs - ([fe6ca26](https://github.com/PixiBixi/goose-multiplayer/commit/fe6ca2607af72f8334d228b49b3b13b1b89963a2)) - Jeremy Delgado
+#### Miscellaneous Chores
+- (**deps**) update step-security/harden-runner action to v2.22.2 (#58) - ([17a00ca](https://github.com/PixiBixi/goose-multiplayer/commit/17a00ca49f482c17d040fa611881c0fa93571081)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.48](https://github.com/PixiBixi/goose-multiplayer/compare/67fe4609760f71e2e8ef2771b90b413da0a24f74..v0.6.48) - 2026-10-21
 #### Miscellaneous Chores
 - (**deps**) update node.js to 6f08a52 (#36) - ([eb53657](https://github.com/PixiBixi/goose-multiplayer/commit/eb536577495a667cc24cd8b4bb321ec12cbaa6f1)) - renovate[bot], renovate[bot]

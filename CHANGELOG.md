@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.6.50](https://github.com/PixiBixi/goose-multiplayer/compare/108b93325b1e7f0be438f0f8acabb2d776f37a45..v0.6.50) - 2026-10-26
+#### Miscellaneous Chores
+- (**deps**) lock file maintenance (#59) - ([108b933](https://github.com/PixiBixi/goose-multiplayer/commit/108b93325b1e7f0be438f0f8acabb2d776f37a45)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.6.49](https://github.com/PixiBixi/goose-multiplayer/compare/fe6ca2607af72f8334d228b49b3b13b1b89963a2..v0.6.49) - 2026-10-25
 #### Continuous Integration
 - (**release**) serialize release runs - ([fe6ca26](https://github.com/PixiBixi/goose-multiplayer/commit/fe6ca2607af72f8334d228b49b3b13b1b89963a2)) - Jeremy Delgado

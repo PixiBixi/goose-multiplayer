@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.0](https://github.com/PixiBixi/goose-multiplayer/compare/44e2ece150f544195b4cbf21d09f6aa7d8dc0bb4..v0.7.0) - 2026-11-01
+#### Features
+- (**web**) add goose favicon - ([44e2ece](https://github.com/PixiBixi/goose-multiplayer/commit/44e2ece150f544195b4cbf21d09f6aa7d8dc0bb4)) - Jeremy Delgado
+
+- - -
+
 ## [v0.6.52](https://github.com/PixiBixi/goose-multiplayer/compare/420327ce29c500c20482982948097f5953855a39..v0.6.52) - 2026-10-28
 #### Miscellaneous Chores
 - (**deps**) update github-actions (#61) - ([420327c](https://github.com/PixiBixi/goose-multiplayer/commit/420327ce29c500c20482982948097f5953855a39)) - renovate[bot], renovate[bot]

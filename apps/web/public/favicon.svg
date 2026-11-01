@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jeu de l'oie">
+  <!-- A white goose in profile on a sky-blue tile. Big flat shapes only, judged at 16px. -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="36%" r="72%">
+      <stop offset="0" stop-color="#7fd6ff"/>
+      <stop offset="1" stop-color="#1f7fc4"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#sky)"/>
+  <path d="M10 50h44" stroke="#5fbf5a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M30 47v5M38 47v5" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 38c0-8 8-12 18-12h8c8 0 13 3 16-2 1 8-4 22-20 22h-6c-10 0-16-3-16-8z" fill="#fff"/>
+  <path d="M22 34c0-12 0-20-4-24" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="17" cy="11" r="6.5" fill="#fff"/>
+  <path d="M10 9.5 3 12l7 2.5z" fill="#ff9a1f" stroke="#ff9a1f" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="15.5" cy="9.5" r="1.6" fill="#1b2430"/>
+  <path d="M30 34c5 5 13 5 18 0-5-2-13-2-18 0z" fill="#dfe8f0"/>
+</svg>

@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.2](https://github.com/PixiBixi/goose-multiplayer/compare/5a879e54843a887a698beeda49d7c4fdd30a8202..v0.7.2) - 2026-11-02
+#### Miscellaneous Chores
+- (**deps**) update step-security/harden-runner action to v2.22.3 (#63) - ([5a879e5](https://github.com/PixiBixi/goose-multiplayer/commit/5a879e54843a887a698beeda49d7c4fdd30a8202)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.1](https://github.com/PixiBixi/goose-multiplayer/compare/1fc3a859f466fcb659ad72e97e967c47af4c8fde..v0.7.1) - 2026-11-02
 #### Miscellaneous Chores
 - (**deps**) update dependency typescript-eslint to v8.72.1 (#62) - ([1fc3a85](https://github.com/PixiBixi/goose-multiplayer/commit/1fc3a859f466fcb659ad72e97e967c47af4c8fde)) - renovate[bot], renovate[bot]

@@ -155,12 +155,12 @@ la même ligne. L'image publiée est celle que le pipeline a démarrée et sond�
 retaguée et non reconstruite : une seconde construction publierait quelque chose
 dont personne n'a prouvé que ça démarre.
 
-Le crochet `pre-commit` couvre le trou entre `npm run verify` et la CI : `verify`
+Le crochet prek couvre le trou entre `npm run verify` et la CI : `verify`
 ne lance ni `format:check` ni `build`, et un fichier non formaté est déjà passé
 en local avant de casser la CI.
 
 ```bash
-pre-commit install
+prek install
 ```
 
 ## Où en est le projet

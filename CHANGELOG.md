@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.5](https://github.com/PixiBixi/goose-multiplayer/compare/fc56c62be0fa7a17153cc2353fe9006840b2c2d1..v0.7.5) - 2026-11-07
+#### Documentation
+- switch the hook commands to prek (#66) - ([fc56c62](https://github.com/PixiBixi/goose-multiplayer/commit/fc56c62be0fa7a17153cc2353fe9006840b2c2d1)) - Jérémy
+#### Miscellaneous Chores
+- (**deps**) update dev-dependencies (#68) - ([1378958](https://github.com/PixiBixi/goose-multiplayer/commit/1378958b317bfcc119872cfd28b7644c543bb0b3)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.4](https://github.com/PixiBixi/goose-multiplayer/compare/51b8947f238d8b55b2c31bf200ba884860c69600..v0.7.4) - 2026-11-03
 #### Miscellaneous Chores
 - (**deps**) update node.js to c6ad9e9 (#65) - ([51b8947](https://github.com/PixiBixi/goose-multiplayer/commit/51b8947f238d8b55b2c31bf200ba884860c69600)) - renovate[bot], renovate[bot]

@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.6](https://github.com/PixiBixi/goose-multiplayer/compare/8354118bb264129d11e73bef91689faed04b5e55..v0.7.6) - 2026-11-08
+#### Miscellaneous Chores
+- (**deps**) update zizmorcore/zizmor-action action to v0.8.1 (#69) - ([8354118](https://github.com/PixiBixi/goose-multiplayer/commit/8354118bb264129d11e73bef91689faed04b5e55)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.5](https://github.com/PixiBixi/goose-multiplayer/compare/fc56c62be0fa7a17153cc2353fe9006840b2c2d1..v0.7.5) - 2026-11-07
 #### Documentation
 - switch the hook commands to prek (#66) - ([fc56c62](https://github.com/PixiBixi/goose-multiplayer/commit/fc56c62be0fa7a17153cc2353fe9006840b2c2d1)) - Jérémy

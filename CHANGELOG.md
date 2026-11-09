@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.7](https://github.com/PixiBixi/goose-multiplayer/compare/e78dc6c6bde49cf3ce91e6179db1162b2cbd308d..v0.7.7) - 2026-11-09
+#### Miscellaneous Chores
+- (**deps**) lock file maintenance (#70) - ([e78dc6c](https://github.com/PixiBixi/goose-multiplayer/commit/e78dc6c6bde49cf3ce91e6179db1162b2cbd308d)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.6](https://github.com/PixiBixi/goose-multiplayer/compare/8354118bb264129d11e73bef91689faed04b5e55..v0.7.6) - 2026-11-08
 #### Miscellaneous Chores
 - (**deps**) update zizmorcore/zizmor-action action to v0.8.1 (#69) - ([8354118](https://github.com/PixiBixi/goose-multiplayer/commit/8354118bb264129d11e73bef91689faed04b5e55)) - renovate[bot], renovate[bot]

@@ -32,7 +32,6 @@ export function makeView(patch: Partial<TableView> = {}): TableView {
     lastTurn: null,
     winner: null,
     ranking: [],
-    chat: [],
     ...patch,
   }
 }

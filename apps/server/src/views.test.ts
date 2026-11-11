@@ -19,7 +19,6 @@ describe('buildView', () => {
         members,
         game: null,
         lastTurn: null,
-        chat: [],
       },
       1,
     )
@@ -40,7 +39,6 @@ describe('buildView', () => {
         members,
         game,
         lastTurn: null,
-        chat: [],
       },
       0,
     )
@@ -59,7 +57,6 @@ describe('buildView', () => {
         members,
         game,
         lastTurn: null,
-        chat: [],
       },
       0,
     )
@@ -84,7 +81,6 @@ describe('buildView', () => {
         members,
         game,
         lastTurn: null,
-        chat: [],
       },
       0,
     )
@@ -103,29 +99,10 @@ describe('buildView', () => {
         members,
         game,
         lastTurn: null,
-        chat: [],
       },
       1,
     )
     expect(view.turn.legalMoves).toEqual([])
-  })
-
-  it('passes the chat log through untouched', () => {
-    const chat = [{ seat: 0, name: 'Alice', text: 'salut', at: 1 }]
-    const view = buildView(
-      {
-        code: 'ABCDEF',
-        phase: 'lobby',
-        config: DEFAULT_CONFIG,
-        hostSeat: 0,
-        members,
-        game: null,
-        lastTurn: null,
-        chat,
-      },
-      0,
-    )
-    expect(view.chat).toBe(chat)
   })
 
   it('refuses to build a view for a seat with no member', () => {
@@ -139,7 +116,6 @@ describe('buildView', () => {
           members,
           game: null,
           lastTurn: null,
-          chat: [],
         },
         5,
       ),
@@ -159,7 +135,6 @@ describe('buildView', () => {
         members,
         game: null,
         lastTurn: null,
-        chat: [],
       },
       0,
     )

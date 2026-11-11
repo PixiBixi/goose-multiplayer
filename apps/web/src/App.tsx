@@ -10,7 +10,7 @@ import { Lobby } from './screens/Lobby.js'
 import { Table } from './screens/Table.js'
 
 export function App(): JSX.Element {
-  const { view, status, error, send, create, join, dismiss, forget } = useGameSocket()
+  const { view, chat, status, error, send, create, join, dismiss, forget } = useGameSocket()
   const initialCode = useMemo(() => codeFromSearch(window.location.search) ?? '', [])
 
   /* Keeps the address bar in step with the table, so a refresh or a shared
@@ -66,6 +66,7 @@ export function App(): JSX.Element {
         ) : (
           <Table
             view={view}
+            chat={chat}
             onRoll={() => {
               send('roll', {})
             }}

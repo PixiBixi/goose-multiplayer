@@ -1,4 +1,5 @@
 import { clientSchemas } from '@goose/protocol'
+import type { ChatLine } from '@goose/protocol'
 import type { TableConfig } from '@goose/engine'
 import type { Server, Socket } from 'socket.io'
 import type { RoomManager } from '../rooms/room-manager.js'
@@ -72,6 +73,26 @@ export function publishRoom(
       }
     })
     .catch(onError)
+}
+
+/* One chat line to every seat at the table. Like publishRoom it goes through
+   the Socket.IO room, so a seat that left stops receiving it. */
+function publishChatLine(io: Server, code: string, line: ChatLine): void {
+  io.in(code)
+    .fetchSockets()
+    .then((sockets) => {
+      for (const other of sockets) {
+        if ((other.data as Partial<SessionData>).code === code) other.emit('chatLine', line)
+      }
+    })
+    .catch(() => undefined)
+}
+
+/* The seat's own view of the table plus the chat so far, which the views no
+   longer carry. Only on sitting down: after that, lines arrive one by one. */
+function publishSeated(socket: Socket, manager: RoomManager, code: string): void {
+  publish(socket, manager, code)
+  socket.emit('chatHistory', manager.get(code)?.chatLog ?? [])
 }
 
 /* One socket.on per key of clientSchemas, so the wire and the handlers can
@@ -179,7 +200,7 @@ export function registerHandlers(io: Server, manager: RoomManager, config: Serve
         release(socket)
         const code = manager.create(parsed.data.name, parsed.data.session, ip)
         sit(socket, code, 0)
-        publish(socket, manager, code)
+        publishSeated(socket, manager, code)
       })
     })
 
@@ -201,7 +222,7 @@ export function registerHandlers(io: Server, manager: RoomManager, config: Serve
           throw new Error('this connection already holds a seat at this table')
         }
         sit(socket, code, takeSeat(manager, code, name, session))
-        publish(socket, manager, code)
+        publishSeated(socket, manager, code)
       })
     })
 
@@ -266,8 +287,8 @@ export function registerHandlers(io: Server, manager: RoomManager, config: Serve
       const session = requireSeat()
       if (!session) return
       run('chat', () => {
-        manager.get(session.code)?.chat(session.seat, parsed.data.text)
-        publishRoom(io, manager, session.code)
+        const line = manager.get(session.code)?.chat(session.seat, parsed.data.text)
+        if (line) publishChatLine(io, session.code, line)
       })
     })
 

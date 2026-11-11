@@ -14,7 +14,7 @@ import { buildView } from '../views.js'
 export type Phase = 'lobby' | 'playing' | 'over'
 
 /* Oldest lines drop first once the log passes this length, so a long game's
-   chat cannot grow the view without bound. */
+   chat cannot grow without bound. */
 const CHAT_LOG_CAP = 200
 
 /* Synchronous and timer-free by design: Room never rolls dice and never
@@ -118,13 +118,20 @@ export class Room {
     this.#lastTurn = null
   }
 
-  chat(seat: Seat, text: string): void {
+  chat(seat: Seat, text: string): ChatLine {
     const member = this.#members[seat]
     if (!member) throw new Error(`no seat ${seat} in this room`)
-    this.#chat.push({ seat, name: member.name, text, at: Date.now() })
+    const line = { seat, name: member.name, text, at: Date.now() }
+    this.#chat.push(line)
     if (this.#chat.length > CHAT_LOG_CAP) {
       this.#chat.splice(0, this.#chat.length - CHAT_LOG_CAP)
     }
+    return line
+  }
+
+  /** The log, oldest first. Sent on its own events, never inside a table view. */
+  get chatLog(): ChatLine[] {
+    return [...this.#chat]
   }
 
   view(seat: Seat): TableView {
@@ -137,7 +144,6 @@ export class Room {
         members: this.#members,
         game: this.#game,
         lastTurn: this.#lastTurn,
-        chat: this.#chat,
       },
       seat,
     )

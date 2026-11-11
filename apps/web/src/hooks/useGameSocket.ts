@@ -1,5 +1,5 @@
 import { clientSchemas } from '@goose/protocol'
-import type { ClientEvent, TableView } from '@goose/protocol'
+import type { ChatLine, ClientEvent, TableView } from '@goose/protocol'
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { t } from '../i18n/index.js'
@@ -12,6 +12,7 @@ export type Send = <E extends ClientEvent>(event: E, payload: PayloadOf<E>) => v
 
 export type GameSocket = {
   view: TableView | null
+  chat: ChatLine[]
   status: Status
   error: string | null
   send: Send
@@ -80,6 +81,12 @@ export function useGameSocket(): GameSocket {
       rememberTable(seated.current)
       dispatch({ type: 'view', view })
     })
+    connection.on('chatHistory', (lines: ChatLine[]) => {
+      dispatch({ type: 'chatHistory', lines })
+    })
+    connection.on('chatLine', (line: ChatLine) => {
+      dispatch({ type: 'chatLine', line })
+    })
     connection.on('error', (error: ServerError) => {
       /* A refused rejoin means the table is gone. Forget it, or every reload
          from now on lands on the same refusal. */
@@ -130,6 +137,7 @@ export function useGameSocket(): GameSocket {
 
   return {
     view: state.view,
+    chat: state.chat,
     status: state.status,
     error: state.error,
     send,

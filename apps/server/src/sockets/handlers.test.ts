@@ -33,12 +33,21 @@ function table() {
     onView: () => undefined,
   })
   let connect: (socket: unknown) => void = () => undefined
-  registerHandlers(
-    { on: (_: string, fn: (s: unknown) => void) => (connect = fn) } as never,
+  const sockets: FakeSocket[] = []
+  const io = {
+    on: (_: string, fn: (s: unknown) => void) => (connect = fn),
+    in: (code: string) => ({
+      fetchSockets: () => Promise.resolve(sockets.filter((socket) => socket.data.code === code)),
+    }),
+  }
+  registerHandlers(io as never, manager, loadConfig({}))
+  return {
     manager,
-    loadConfig({}),
-  )
-  return { manager, connect: (socket: FakeSocket) => connect(socket) }
+    connect: (socket: FakeSocket) => {
+      sockets.push(socket)
+      connect(socket)
+    },
+  }
 }
 
 function fire(socket: FakeSocket, action: string, payload: unknown): void {
@@ -46,6 +55,10 @@ function fire(socket: FakeSocket, action: string, payload: unknown): void {
     p: unknown,
   ) => void
   handler(payload)
+}
+
+function chatLines(socket: FakeSocket, event: 'chatLine' | 'chatHistory'): unknown[] {
+  return socket.emit.mock.calls.filter((call) => call[0] === event).map((call) => call[1])
 }
 
 function lastView(socket: FakeSocket): TableView {
@@ -191,7 +204,39 @@ describe('handlers', () => {
     // chat, configureTable and leaveRoom never reach the manager, so
     // they never trigger its onView: answering only the socket that acted left
     // everyone else on a table where nobody ever said anything.
-    expect(lastView(host).chat.map((line) => line.text)).toEqual(['bien joué'])
-    expect(lastView(guest).chat.map((line) => line.text)).toEqual(['bien joué'])
+    for (const socket of [host, guest]) {
+      expect(chatLines(socket, 'chatLine')).toEqual([
+        expect.objectContaining({ name: 'Claire', text: 'bien joué' }),
+      ])
+      // The line travels on its own event: no table view carries the log.
+      expect(lastView(socket)).not.toHaveProperty('chat')
+    }
+  })
+
+  it('sends the log once to a seat that sits down, then only new lines', async () => {
+    const { connect } = table()
+    const host = fakeSocket('a')
+    connect(host)
+    fire(host, 'createRoom', { name: 'Jérémy', session: 'token-host' })
+    const code = lastView(host).code
+    expect(chatLines(host, 'chatHistory')).toEqual([[]])
+
+    fire(host, 'chat', { text: 'premier' })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const guest = fakeSocket('b')
+    connect(guest)
+    fire(guest, 'joinRoom', { code, name: 'Claire', session: 'token-guest' })
+    expect(chatLines(guest, 'chatHistory')).toEqual([
+      [expect.objectContaining({ name: 'Jérémy', text: 'premier' })],
+    ])
+    expect(chatLines(guest, 'chatLine')).toEqual([])
+
+    // A roll republishes the view, and the log does not ride along.
+    fire(host, 'startGame', {})
+    fire(host, 'roll', {})
+    expect(lastView(host)).not.toHaveProperty('chat')
+    expect(chatLines(host, 'chatHistory')).toHaveLength(1)
   })
 })

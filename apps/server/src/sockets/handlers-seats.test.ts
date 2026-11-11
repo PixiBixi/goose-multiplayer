@@ -119,7 +119,8 @@ describe('a socket walking to another table', () => {
 
     fire(host, 'chat', { text: 'still here' })
     await settle()
-    expect(lastView(host).chat.map((line) => line.text)).toEqual(['still here'])
+    const lines = host.emit.mock.calls.filter((call) => call[0] === 'chatLine')
+    expect(lines.map((call) => (call[1] as { text: string }).text)).toEqual(['still here'])
   })
 })
 

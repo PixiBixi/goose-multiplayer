@@ -83,5 +83,4 @@ export type TableView = {
   lastTurn: { seat: Seat; dice: number[]; steps: Step[] } | null
   winner: Seat | null
   ranking: Seat[]
-  chat: ChatLine[]
 }

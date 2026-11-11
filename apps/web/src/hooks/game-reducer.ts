@@ -1,4 +1,7 @@
-import type { TableView } from '@goose/protocol'
+import type { ChatLine, TableView } from '@goose/protocol'
+
+/* The server keeps this many lines; the client keeps no more. */
+const CHAT_CAP = 200
 
 export type Status = 'connecting' | 'open' | 'closed'
 
@@ -6,6 +9,7 @@ export type ClientState = {
   view: TableView | null
   status: Status
   error: string | null
+  chat: ChatLine[]
 }
 
 export type ClientAction =
@@ -14,8 +18,10 @@ export type ClientAction =
   | { type: 'error'; error: string }
   | { type: 'dismiss' }
   | { type: 'left' }
+  | { type: 'chatHistory'; lines: ChatLine[] }
+  | { type: 'chatLine'; line: ChatLine }
 
-export const initialState: ClientState = { view: null, status: 'connecting', error: null }
+export const initialState: ClientState = { view: null, status: 'connecting', error: null, chat: [] }
 
 /* The client knows no rules. The server ships legalMoves inside each view; this
    reducer stores what arrived and nothing else. Deriving a rule here is how the
@@ -33,6 +39,10 @@ export function reduce(state: ClientState, action: ClientAction): ClientState {
     case 'dismiss':
       return { ...state, error: null }
     case 'left':
-      return { ...state, view: null, error: null }
+      return { ...state, view: null, error: null, chat: [] }
+    case 'chatHistory':
+      return { ...state, chat: action.lines.slice(-CHAT_CAP) }
+    case 'chatLine':
+      return { ...state, chat: [...state.chat, action.line].slice(-CHAT_CAP) }
   }
 }

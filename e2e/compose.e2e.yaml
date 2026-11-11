@@ -34,6 +34,14 @@ services:
     # Local tag, so `up --build` never reaches for the published image.
     image: goose-multiplayer:e2e
     depends_on: [traefik]
+    # Every browser reaches the stack from one address, so the per-IP create, join
+    # and rooms-held limits would throttle the suite. Lifted here, never in the shipped file.
+    environment:
+      CREATE_BURST: '5000'
+      CREATE_PER_SECOND: '5000'
+      JOIN_BURST: '5000'
+      JOIN_PER_SECOND: '5000'
+      MAX_ROOMS_PER_IP: '5000'
     # !override rather than a merge: compose appends label lists, and a router
     # with two rules is not a thing. Only the rule and the entrypoint change.
     # No WebSocket configuration on purpose: Traefik proxies the upgrade itself,

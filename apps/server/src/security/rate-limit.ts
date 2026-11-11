@@ -1,26 +1,43 @@
-import type { Clock } from '../rooms/room-manager.js'
+export type RateLimiter = {
+  allow(key: string): boolean
+  forget(key: string): void
+  size(): number
+}
 
-/* A sliding window per key, backed by the injected clock so a test never
-   waits out a real windowMs. Returns true when the call is allowed. */
-export function makeRateLimiter(opts: {
-  windowMs: number
-  max: number
-  clock: Clock
-}): (key: string) => boolean {
-  const hits = new Map<string, number[]>()
+type Bucket = { tokens: number; lastRefill: number }
 
-  return (key: string): boolean => {
-    const now = opts.clock.now()
-    const cutoff = now - opts.windowMs
-    const recent = (hits.get(key) ?? []).filter((at) => at > cutoff)
+/**
+ * Token bucket per key. The clock is injectable so tests run instantly and
+ * deterministically instead of waiting on real time.
+ */
+export function createRateLimiter(options: {
+  capacity: number
+  refillPerSecond: number
+  now?: () => number
+}): RateLimiter {
+  const { capacity, refillPerSecond } = options
+  const now = options.now ?? (() => Date.now())
+  const buckets = new Map<string, Bucket>()
 
-    if (recent.length >= opts.max) {
-      hits.set(key, recent)
-      return false
-    }
+  return {
+    allow(key) {
+      const current = now()
+      const bucket = buckets.get(key) ?? { tokens: capacity, lastRefill: current }
+      const elapsedSeconds = Math.max(0, current - bucket.lastRefill) / 1000
+      const tokens = Math.min(capacity, bucket.tokens + elapsedSeconds * refillPerSecond)
 
-    recent.push(now)
-    hits.set(key, recent)
-    return true
+      if (tokens < 1) {
+        buckets.set(key, { tokens, lastRefill: current })
+        return false
+      }
+      buckets.set(key, { tokens: tokens - 1, lastRefill: current })
+      return true
+    },
+    forget(key) {
+      buckets.delete(key)
+    },
+    size() {
+      return buckets.size
+    },
   }
 }

@@ -1,9 +1,8 @@
 import { clientSchemas } from '@goose/protocol'
 import type { TableConfig } from '@goose/engine'
 import type { Server, Socket } from 'socket.io'
-import { systemClock } from '../rooms/room-manager.js'
 import type { RoomManager } from '../rooms/room-manager.js'
-import { makeRateLimiter } from '../security/rate-limit.js'
+import { createRateLimiter } from '../security/rate-limit.js'
 
 type SessionData = {
   code: string
@@ -12,8 +11,9 @@ type SessionData = {
 
 /* Generous enough that a normal player never notices it, tight enough that
    a scripted client cannot flood a room. Per socket, not per room: a table
-   the size of MAX_SEATS still leaves each seat its own budget. */
-const RATE_LIMIT = { windowMs: 10_000, max: 30 }
+   the size of MAX_SEATS still leaves each seat its own budget. A burst of 30,
+   refilled at 3 a second. */
+const RATE_LIMIT = { capacity: 30, refillPerSecond: 3 }
 
 /* A returning player carries the token they were first seated with, so the
    manager can hand the seat straight back. RoomManager.reconnect existed and
@@ -77,7 +77,7 @@ export function publishRoom(
    and never throws: an exception in a Socket.IO listener kills the
    connection silently, so every failure is emitted as an 'error' instead. */
 export function registerHandlers(io: Server, manager: RoomManager): void {
-  const allow = makeRateLimiter({ ...RATE_LIMIT, clock: systemClock() })
+  const limiter = createRateLimiter(RATE_LIMIT)
   /* `code:seat` -> the socket holding it. Only that socket may mark the seat
      disconnected, or a closing first tab drops the seat a second tab now holds. */
   const owners = new Map<string, string>()
@@ -119,7 +119,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
 
   io.on('connection', (socket: Socket) => {
     const guard = (): boolean => {
-      if (allow(socket.id)) return true
+      if (limiter.allow(socket.id)) return true
       emitError(socket, 'rate_limited', 'too many actions, slow down')
       return false
     }
@@ -280,6 +280,8 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
     })
 
     socket.on('disconnect', () => {
+      // Before the seat check: a socket that never sat still has a bucket.
+      limiter.forget(socket.id)
       const { code, seat } = socket.data as Partial<SessionData>
       if (code === undefined || seat === undefined) return
       const key = seatKey(code, seat)

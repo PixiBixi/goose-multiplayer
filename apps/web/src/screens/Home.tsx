@@ -1,7 +1,7 @@
-import { clientSchemas } from '@goose/protocol'
 import type { FormEvent, JSX } from 'react'
 import { useState } from 'react'
 import { t } from '../i18n/index.js'
+import { NAME_MAX, validCode, validName } from '../lib/limits.js'
 
 export type HomeProps = {
   onCreate: (name: string) => void
@@ -10,19 +10,13 @@ export type HomeProps = {
   initialCode?: string
 }
 
-/* The two fields are validated against the very schemas the server validates
-   them against. Nothing is re-specified here: `.shape` reaches into the
-   protocol's own rule so a change to the wire changes this form for free. */
-const nameSchema = clientSchemas.createRoom.shape.name
-const codeSchema = clientSchemas.joinRoom.shape.code
-
 export function Home({ onCreate, onJoin, error, initialCode = '' }: HomeProps): JSX.Element {
   const [name, setName] = useState('')
   const [code, setCode] = useState(initialCode)
   const [problem, setProblem] = useState<string | null>(null)
 
-  const nameOk = nameSchema.safeParse(name).success
-  const codeOk = codeSchema.safeParse(code).success
+  const nameOk = validName(name)
+  const codeOk = validCode(code)
 
   const create = (): void => {
     if (!nameOk) {
@@ -56,7 +50,7 @@ export function Home({ onCreate, onJoin, error, initialCode = '' }: HomeProps): 
             id="player-name"
             type="text"
             autoComplete="nickname"
-            maxLength={24}
+            maxLength={NAME_MAX}
             placeholder={t('home.namePlaceholder')}
             value={name}
             onChange={(event) => {

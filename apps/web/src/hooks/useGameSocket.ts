@@ -1,5 +1,4 @@
-import { clientSchemas } from '@goose/protocol'
-import type { ChatLine, ClientEvent, TableView } from '@goose/protocol'
+import type { ChatLine, ClientEvent, TableView, clientSchemas } from '@goose/protocol'
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { t } from '../i18n/index.js'
@@ -39,17 +38,12 @@ export function useGameSocket(): GameSocket {
      socket with empty server-side data, so the seat has to be claimed again. */
   const seated = useRef<{ code: string; name: string } | null>(null)
 
-  /* Validated against the very schema the server will validate it against, so
-     a malformed intent never leaves the tab. The schema is shared, not copied:
-     this adds no rule of its own. */
+  /* Not validated here: the server validates every payload against the shared
+     schemas and answers bad_payload, and importing them would put zod in the
+     client bundle. */
   const emit = useCallback(
     <E extends ClientEvent>(connection: Socket, event: E, payload: PayloadOf<E>): void => {
-      const parsed = clientSchemas[event].safeParse(payload as never)
-      if (!parsed.success) {
-        dispatch({ type: 'error', error: t('error.bad_payload') })
-        return
-      }
-      connection.emit(event, parsed.data)
+      connection.emit(event, payload)
     },
     [],
   )

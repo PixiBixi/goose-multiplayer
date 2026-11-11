@@ -1,9 +1,10 @@
 import { createServer } from 'node:http'
-import { makeRng } from '@goose/engine'
+import { makeDeckRng } from '@goose/engine'
 import { Server } from 'socket.io'
 import { loadConfig } from './config.js'
 import { createApp } from './http.js'
 import { createLogger } from './logger.js'
+import { randomDealSeed } from './rooms/deal-seed.js'
 import { RoomManager, systemClock } from './rooms/room-manager.js'
 import { isAllowedOrigin } from './security/origin.js'
 import { createShutdown } from './shutdown.js'
@@ -38,7 +39,7 @@ function publishView(code: string): void {
 
 const manager = new RoomManager({
   clock: systemClock(),
-  rng: makeRng(Date.now()),
+  rng: makeDeckRng(randomDealSeed()),
   onView: publishView,
 })
 

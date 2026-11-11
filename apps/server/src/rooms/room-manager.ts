@@ -1,4 +1,4 @@
-import { MAX_CONSECUTIVE_DOUBLES, makeRng, rollDice } from '@goose/engine'
+import { MAX_CONSECUTIVE_DOUBLES, rollDice } from '@goose/engine'
 import type { Rng, Seat } from '@goose/engine'
 import { Room } from './room.js'
 import { makeRoomCode } from './room-code.js'
@@ -56,10 +56,6 @@ export function systemClock(): Clock {
 export class RoomManager {
   #deps: ManagerDeps
   #rooms = new Map<string, Entry>()
-  /* Room codes are cosmetic, not gameplay: they draw from their own rng so a
-     table's dice sequence, and a same-seed replay of it, never depends on how
-     many rooms this manager happened to create first. */
-  #codeRng: Rng = makeRng(Date.now())
 
   constructor(deps: ManagerDeps) {
     this.#deps = deps
@@ -68,8 +64,8 @@ export class RoomManager {
   create(name: string, sessionId: string): string {
     if (this.#rooms.size >= (this.#deps.maxRooms ?? MAX_ROOMS))
       throw new Error('the server is full')
-    let code = makeRoomCode(this.#codeRng)
-    while (this.#rooms.has(code)) code = makeRoomCode(this.#codeRng)
+    let code = makeRoomCode()
+    while (this.#rooms.has(code)) code = makeRoomCode()
     const room = new Room(code)
     const seat = room.join(name, sessionId)
     const entry: Entry = {

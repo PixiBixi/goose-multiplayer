@@ -13,8 +13,17 @@ export type ManagerDeps = {
   clock: Clock
   rng: Rng
   onView: (code: string) => void
-  /** Rooms held at once. Nothing else bounds them: a script opening new sockets escapes the rate limit. */
+  /** Rooms held at once, whoever created them. */
   maxRooms?: number
+  /** Rooms one owner (a client IP) may hold at once. Unlimited when omitted. */
+  maxRoomsPerOwner?: number
+}
+
+/** The owner already holds its share of rooms; the socket layer answers rate_limited. */
+export class TooManyRoomsError extends Error {
+  constructor() {
+    super('too many tables from this address')
+  }
 }
 
 export const TURN_TIMEOUT_MS = 60_000
@@ -56,14 +65,21 @@ export function systemClock(): Clock {
 export class RoomManager {
   #deps: ManagerDeps
   #rooms = new Map<string, Entry>()
+  /** Who created each room, and how many each owner holds, until the room is dropped. */
+  #ownerOf = new Map<string, string>()
+  #ownedCount = new Map<string, number>()
 
   constructor(deps: ManagerDeps) {
     this.#deps = deps
   }
 
-  create(name: string, sessionId: string): string {
+  create(name: string, sessionId: string, owner: string | null = null): string {
     if (this.#rooms.size >= (this.#deps.maxRooms ?? MAX_ROOMS))
       throw new Error('the server is full')
+    const owned = owner === null ? 0 : (this.#ownedCount.get(owner) ?? 0)
+    if (owned >= (this.#deps.maxRoomsPerOwner ?? Number.POSITIVE_INFINITY)) {
+      throw new TooManyRoomsError()
+    }
     let code = makeRoomCode()
     while (this.#rooms.has(code)) code = makeRoomCode()
     const room = new Room(code)
@@ -75,6 +91,10 @@ export class RoomManager {
       sessions: new Map([[sessionId, seat]]),
     }
     this.#rooms.set(code, entry)
+    if (owner !== null) {
+      this.#ownerOf.set(code, owner)
+      this.#ownedCount.set(owner, owned + 1)
+    }
     this.#deps.onView(code)
     return code
   }
@@ -194,6 +214,17 @@ export class RoomManager {
     for (const grace of entry.graceTimers.values()) this.#deps.clock.clearTimeout(grace)
     entry.graceTimers.clear()
     this.#rooms.delete(code)
+    this.#releaseOwner(code)
+  }
+
+  /** Gives a dropped room back to its owner's allowance; the count is dropped at zero. */
+  #releaseOwner(code: string): void {
+    const owner = this.#ownerOf.get(code)
+    if (owner === undefined) return
+    this.#ownerOf.delete(code)
+    const left = (this.#ownedCount.get(owner) ?? 1) - 1
+    if (left > 0) this.#ownedCount.set(owner, left)
+    else this.#ownedCount.delete(owner)
   }
 
   #clearGrace(entry: Entry, seat: Seat): void {

@@ -1,6 +1,11 @@
 import { makeRng } from '@goose/engine'
 import { describe, expect, it, vi } from 'vitest'
-import { DISCONNECT_GRACE_MS, RoomManager, TURN_TIMEOUT_MS } from './room-manager.js'
+import {
+  DISCONNECT_GRACE_MS,
+  RoomManager,
+  TooManyRoomsError,
+  TURN_TIMEOUT_MS,
+} from './room-manager.js'
 
 /* A clock the test drives by hand. Nothing here ever waits: a suite that
    sleeps for a timeout is a suite nobody runs on every commit. */
@@ -114,6 +119,30 @@ describe('RoomManager', () => {
     const m = new RoomManager({ clock: fakeClock(), rng: makeRng(1), onView: vi.fn(), maxRooms: 1 })
     m.create('a', 's0')
     expect(() => m.create('b', 's1')).toThrow(/full/i)
+  })
+
+  it('caps the rooms one client holds, so one address cannot fill the server', () => {
+    const m = new RoomManager({
+      clock: fakeClock(),
+      rng: makeRng(1),
+      onView: vi.fn(),
+      maxRoomsPerOwner: 2,
+    })
+    m.create('a', 's0', '203.0.113.7')
+    m.create('b', 's1', '203.0.113.7')
+    expect(() => m.create('c', 's2', '203.0.113.7')).toThrow(TooManyRoomsError)
+    expect(() => m.create('d', 's3', '198.51.100.1')).not.toThrow()
+  })
+
+  it('gives a client its allowance back when its room is dropped', () => {
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: makeRng(1), onView: vi.fn(), maxRoomsPerOwner: 1 })
+    const code = m.create('a', 's0', '203.0.113.7')
+    expect(() => m.create('b', 's1', '203.0.113.7')).toThrow(TooManyRoomsError)
+    m.disconnect(code, 0)
+    clock.advance(DISCONNECT_GRACE_MS)
+    expect(m.get(code)).toBeUndefined()
+    expect(() => m.create('b', 's1', '203.0.113.7')).not.toThrow()
   })
 
   it('publishes a view after every state change', () => {

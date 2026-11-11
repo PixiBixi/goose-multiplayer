@@ -41,9 +41,10 @@ const manager = new RoomManager({
   clock: systemClock(),
   rng: makeDeckRng(randomDealSeed()),
   onView: publishView,
+  maxRoomsPerOwner: config.maxRoomsPerIp,
 })
 
-registerHandlers(io, manager)
+registerHandlers(io, manager, config)
 
 httpServer.listen(config.port, () => {
   logger.info(`listening on port ${config.port}`, { behindTls: config.behindTls })

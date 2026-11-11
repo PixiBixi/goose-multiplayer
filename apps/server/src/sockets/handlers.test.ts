@@ -2,13 +2,23 @@ import { makeRng } from '@goose/engine'
 import { clientSchemas } from '@goose/protocol'
 import type { TableView } from '@goose/protocol'
 import { describe, expect, it, vi } from 'vitest'
+import { loadConfig } from '../config.js'
 import { RoomManager, systemClock } from '../rooms/room-manager.js'
 import { registerHandlers } from './handlers.js'
 
 function fakeSocket(id = 'sock1') {
   const on = vi.fn()
   const emit = vi.fn()
-  return { id, on, emit, join: vi.fn(), leave: vi.fn(), data: {} as Record<string, unknown> }
+  const handshake = { address: '127.0.0.1', headers: {} }
+  return {
+    id,
+    on,
+    emit,
+    join: vi.fn(),
+    leave: vi.fn(),
+    data: {} as Record<string, unknown>,
+    handshake,
+  }
 }
 
 type FakeSocket = ReturnType<typeof fakeSocket>
@@ -26,6 +36,7 @@ function table() {
   registerHandlers(
     { on: (_: string, fn: (s: unknown) => void) => (connect = fn) } as never,
     manager,
+    loadConfig({}),
   )
   return { manager, connect: (socket: FakeSocket) => connect(socket) }
 }
@@ -46,7 +57,7 @@ describe('handlers', () => {
   it('registers one listener per declared client action', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const registered = socket.on.mock.calls.map((c) => c[0] as string)
     for (const action of Object.keys(clientSchemas)) {
       // The handler is the piece that gets forgotten. Testing both ends of a
@@ -58,7 +69,7 @@ describe('handlers', () => {
   it('rejects a payload that fails its schema without throwing', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const chat = socket.on.mock.calls.find((c) => c[0] === 'chat')?.[1] as (p: unknown) => void
     expect(() => chat({ text: '' })).not.toThrow()
     expect(socket.emit).toHaveBeenCalledWith(
@@ -89,7 +100,7 @@ describe('handlers', () => {
   it('refuses playCard while the table runs in classic mode', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const play = socket.on.mock.calls.find((c) => c[0] === 'playCard')?.[1] as (p: unknown) => void
     play({ cardId: 'x' })
     expect(socket.emit).toHaveBeenCalledWith(
@@ -152,7 +163,7 @@ describe('handlers', () => {
   it('refuses a seat request with no session token at all', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     fire(socket, 'joinRoom', { code: 'ABC123', name: 'Claire' })
     expect(socket.emit).toHaveBeenCalledWith(
       'error',

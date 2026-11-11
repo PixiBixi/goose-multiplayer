@@ -2,7 +2,10 @@ import { clientSchemas } from '@goose/protocol'
 import type { TableConfig } from '@goose/engine'
 import type { Server, Socket } from 'socket.io'
 import type { RoomManager } from '../rooms/room-manager.js'
-import { createRateLimiter } from '../security/rate-limit.js'
+import type { ServerConfig } from '../config.js'
+import { TooManyRoomsError } from '../rooms/room-manager.js'
+import { clientIp } from '../security/client-ip.js'
+import { createRateLimiter, type RateLimiter } from '../security/rate-limit.js'
 
 type SessionData = {
   code: string
@@ -76,8 +79,18 @@ export function publishRoom(
    listener. Every handler validates its payload before touching the room,
    and never throws: an exception in a Socket.IO listener kills the
    connection silently, so every failure is emitted as an 'error' instead. */
-export function registerHandlers(io: Server, manager: RoomManager): void {
+export function registerHandlers(io: Server, manager: RoomManager, config: ServerConfig): void {
   const limiter = createRateLimiter(RATE_LIMIT)
+  /* Keyed by client IP, so reconnecting gets no fresh bucket, and never
+     forgotten on disconnect for the same reason: the limiter sweeps them. */
+  const createLimiter = createRateLimiter({
+    capacity: config.createBurst,
+    refillPerSecond: config.createPerSecond,
+  })
+  const joinLimiter = createRateLimiter({
+    capacity: config.joinBurst,
+    refillPerSecond: config.joinPerSecond,
+  })
   /* `code:seat` -> the socket holding it. Only that socket may mark the seat
      disconnected, or a closing first tab drops the seat a second tab now holds. */
   const owners = new Map<string, string>()
@@ -118,8 +131,16 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
   }
 
   io.on('connection', (socket: Socket) => {
+    const ip = clientIp(socket.handshake, config.behindTls)
     const guard = (): boolean => {
       if (limiter.allow(socket.id)) return true
+      emitError(socket, 'rate_limited', 'too many actions, slow down')
+      return false
+    }
+
+    /** False after telling the caller it is over this per-IP budget. */
+    const within = (budget: RateLimiter): boolean => {
+      if (budget.allow(ip)) return true
       emitError(socket, 'rate_limited', 'too many actions, slow down')
       return false
     }
@@ -137,6 +158,10 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
       try {
         fn()
       } catch (err) {
+        if (err instanceof TooManyRoomsError) {
+          emitError(socket, 'rate_limited', err.message)
+          return
+        }
         emitError(socket, `${action}_failed`, err instanceof Error ? err.message : String(err))
       }
     }
@@ -148,9 +173,11 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
         emitError(socket, 'bad_payload', parsed.error.message)
         return
       }
+      // After the payload and before the room exists: a refusal leaves nothing half-created.
+      if (!within(createLimiter)) return
       run('create', () => {
         release(socket)
-        const code = manager.create(parsed.data.name, parsed.data.session)
+        const code = manager.create(parsed.data.name, parsed.data.session, ip)
         sit(socket, code, 0)
         publish(socket, manager, code)
       })
@@ -163,6 +190,7 @@ export function registerHandlers(io: Server, manager: RoomManager): void {
         emitError(socket, 'bad_payload', parsed.error.message)
         return
       }
+      if (!within(joinLimiter)) return
       run('join', () => {
         const { code, name, session } = parsed.data
         // Walking to another table gives the old seat up; rejoining this one does not.

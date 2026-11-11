@@ -1,6 +1,7 @@
 import { makeRng } from '@goose/engine'
 import type { TableView } from '@goose/protocol'
 import { describe, expect, it, vi } from 'vitest'
+import { loadConfig } from '../config.js'
 import { RoomManager, systemClock } from '../rooms/room-manager.js'
 import { publishRoom, registerHandlers } from './handlers.js'
 
@@ -22,13 +23,14 @@ function server() {
     rng: makeRng(7),
     onView: (code) => publishRoom(io as never, manager, code),
   })
-  registerHandlers(io as never, manager)
+  registerHandlers(io as never, manager, loadConfig({}))
 
   const client = (id: string): FakeSocket => {
     const socket: FakeSocket = {
       id,
       rooms: new Set<string>(),
       data: {},
+      handshake: { address: '127.0.0.1', headers: {} },
       on: vi.fn(),
       emit: vi.fn(),
       join: (code: string) => socket.rooms.add(code),
@@ -49,6 +51,7 @@ type FakeSocket = {
   id: string
   rooms: Set<string>
   data: Record<string, unknown>
+  handshake: { address: string; headers: Record<string, string> }
   on: ReturnType<typeof vi.fn>
   emit: ReturnType<typeof vi.fn>
   join: (code: string) => void

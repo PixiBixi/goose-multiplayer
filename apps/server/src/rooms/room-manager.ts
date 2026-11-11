@@ -128,15 +128,15 @@ export class RoomManager {
     this.#deps.onView(code)
   }
 
-  /* A roll that actually happens in time needs no further enforcement: it
-     proves someone is at the table. It only rearms a timer if the seat it
-     hands off to turns out to be 'left', in which case nobody will ever roll
-     for it and the manager has to keep going on its own. */
+  /* A manual roll proves someone is at the table, but only for this turn:
+     the seat it hands off to gets a fresh clock, or an idle player would
+     freeze the table. Seats marked 'left' are skipped first. */
   roll(code: string, seat: Seat): void {
     const entry = this.#require(code)
     this.#clearTurnTimer(entry)
     this.#resolveRoll(entry, seat)
-    if (this.#skipLeftSeats(entry)) this.#armTurnTimer(code, entry)
+    this.#skipLeftSeats(entry)
+    this.#armTurnTimer(code, entry)
     this.#deps.onView(code)
   }
 
@@ -254,16 +254,13 @@ export class RoomManager {
   /* Rolls on behalf of every consecutive seat marked 'left': nobody will
      ever act for them, so waiting out a timer for each one only delays the
      table. Bounded at one full lap so a table abandoned by everyone still
-     arms a timer instead of spinning forever. Returns whether it resolved
-     at least one seat, so a caller that must not arm a timer on an ordinary
-     turn (a prompt manual roll) only does so when this actually fired.
+     arms a timer instead of spinning forever.
 
      A lap is longer than the seat count: the doubles house rule can hand the
      same seat up to MAX_CONSECUTIVE_DOUBLES rolls before the turn moves on,
      and a bound of one roll per seat would leave a 'left' seat still holding
      the turn when the loop gave up. */
-  #skipLeftSeats(entry: Entry): boolean {
-    let skipped = false
+  #skipLeftSeats(entry: Entry): void {
     const cap = entry.room.seatCount * MAX_CONSECUTIVE_DOUBLES
     for (let hops = 0; hops <= cap; hops++) {
       if (entry.room.phase !== 'playing') break
@@ -271,9 +268,7 @@ export class RoomManager {
       const seat = view.turn.seat
       if (view.seats[seat]?.presence !== 'left') break
       this.#resolveRoll(entry, seat)
-      skipped = true
     }
-    return skipped
   }
 
   #armTurnTimer(code: string, entry: Entry): void {

@@ -57,15 +57,26 @@ describe('RoomManager', () => {
     expect(m.get(code)?.view(0).turn.seat).toBe(1)
   })
 
-  it('cancels the turn timer when the seat rolls in time', () => {
-    const { m, clock } = manager()
+  it('gives the next seat its own clock after a manual roll', () => {
+    // Dice 1 and 2 over and over: never a double, so the turn always moves on.
+    const values = [0, 0.2]
+    let next = 0
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: () => values[next++ % 2] ?? 0, onView: () => {} })
     const code = m.create('a', 's0')
     m.join(code, 'b', 's1')
     m.start(code, 0)
+    clock.advance(TURN_TIMEOUT_MS - 1)
     m.roll(code, 0)
-    const after = m.get(code)?.view(0).lastTurn
-    clock.advance(TURN_TIMEOUT_MS * 3)
-    expect(m.get(code)?.view(0).lastTurn?.dice).toEqual(after?.dice)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+
+    // The clock that was running for seat 0 is gone: it does not roll for seat 1.
+    clock.advance(TURN_TIMEOUT_MS - 1)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+    // Seat 1 never acted, so a full timeout after seat 0's roll the manager rolls for it.
+    clock.advance(1)
+    expect(m.get(code)?.view(0).lastTurn?.seat).toBe(1)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
   })
 
   it('arms the turn clock again after a rematch', () => {

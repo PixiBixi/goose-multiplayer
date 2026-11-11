@@ -1,6 +1,6 @@
 import type { Rng } from '@goose/engine'
 import { describe, expect, it, vi } from 'vitest'
-import { DISCONNECT_GRACE_MS, RoomManager } from './room-manager.js'
+import { DISCONNECT_GRACE_MS, RoomManager, TURN_TIMEOUT_MS } from './room-manager.js'
 
 /* Same driven-by-hand clock as room-manager.test.ts: nothing here waits on a
    real timer, so the suite stays fast on every run. */
@@ -72,7 +72,7 @@ describe('RoomManager, presence', () => {
     expect(m.get(code)?.view(0).seats[1]?.presence).toBe('active')
   })
 
-  it('does not free the seat and does not resolve its turn before the grace period elapses', () => {
+  it('does not free the seat before the grace period, and rolls for it once the turn clock runs out', () => {
     const { m, clock } = manager()
     const code = m.create('a', 's0')
     m.join(code, 'b', 's1')
@@ -80,11 +80,14 @@ describe('RoomManager, presence', () => {
     m.roll(code, 0)
     m.disconnect(code, 1)
 
-    clock.advance(DISCONNECT_GRACE_MS - 1)
+    clock.advance(TURN_TIMEOUT_MS - 1)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
 
+    // The clock armed by seat 0's roll resolves the turn; the grace is still running.
+    clock.advance(DISCONNECT_GRACE_MS - TURN_TIMEOUT_MS)
     const view = m.get(code)?.view(0)
     expect(view?.seats[1]?.presence).toBe('disconnected')
-    expect(view?.turn.seat).toBe(1)
+    expect(view?.lastTurn?.seat).toBe(1)
   })
 
   it('frees the seat to left after the grace period, and the turn stops waiting on it', () => {

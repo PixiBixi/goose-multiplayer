@@ -42,6 +42,9 @@ const manager = new RoomManager({
   rng: makeDeckRng(randomDealSeed()),
   onView: publishView,
   maxRoomsPerOwner: config.maxRoomsPerIp,
+  onError: (code, error) => {
+    logger.error('timer callback failed', { code, error: error.message })
+  },
 })
 
 registerHandlers(io, manager, config)

@@ -17,6 +17,8 @@ export type ManagerDeps = {
   maxRooms?: number
   /** Rooms one owner (a client IP) may hold at once. Unlimited when omitted. */
   maxRoomsPerOwner?: number
+  /** Told about an exception a timer callback swallowed, so it can be logged. */
+  onError?: (code: string, error: Error) => void
 }
 
 /** The owner already holds its share of rooms; the socket layer answers rate_limited. */
@@ -144,7 +146,10 @@ export class RoomManager {
     const entry = this.#require(code)
     this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'disconnected')
-    const timer = this.#deps.clock.setTimeout(() => this.#expire(code, seat), DISCONNECT_GRACE_MS)
+    const timer = this.#deps.clock.setTimeout(
+      () => this.#guarded(code, () => this.#expire(code, seat)),
+      DISCONNECT_GRACE_MS,
+    )
     entry.graceTimers.set(seat, timer)
     this.#deps.onView(code)
   }
@@ -244,6 +249,7 @@ export class RoomManager {
   #autoRoll(code: string): void {
     const entry = this.#rooms.get(code)
     if (!entry || entry.room.phase !== 'playing') return
+    entry.turnTimer = null // fired: the handle is spent
     const seat = entry.room.view(entry.room.hostSeat).turn.seat
     this.#resolveRoll(entry, seat)
     this.#skipLeftSeats(entry)
@@ -273,7 +279,23 @@ export class RoomManager {
 
   #armTurnTimer(code: string, entry: Entry): void {
     if (entry.room.phase !== 'playing') return
-    entry.turnTimer = this.#deps.clock.setTimeout(() => this.#autoRoll(code), TURN_TIMEOUT_MS)
+    entry.turnTimer = this.#deps.clock.setTimeout(
+      () => this.#guarded(code, () => this.#autoRoll(code)),
+      TURN_TIMEOUT_MS,
+    )
+  }
+
+  /* A timer callback has no caller to catch for it: a throw here would end the
+     process and every room with it. Log it and keep the room playing. */
+  #guarded(code: string, fn: () => void): void {
+    try {
+      fn()
+    } catch (err) {
+      this.#deps.onError?.(code, err instanceof Error ? err : new Error(String(err)))
+      const entry = this.#rooms.get(code)
+      // The failed callback may be the one that would have re-armed the clock.
+      if (entry && entry.turnTimer === null) this.#armTurnTimer(code, entry)
+    }
   }
 
   #clearTurnTimer(entry: Entry): void {

@@ -230,4 +230,45 @@ describe('RoomManager', () => {
     }
     expect(play()).toEqual(play())
   })
+
+  describe('a timer callback that throws', () => {
+    it('is logged and leaves the room playing, with the turn clock armed again', () => {
+      const clock = fakeClock()
+      const onError = vi.fn()
+      let broken = true
+      const rng = () => {
+        if (broken) throw new Error('boom')
+        return 0.2
+      }
+      const m = new RoomManager({ clock, rng, onView: () => {}, onError })
+      const code = m.create('a', 's0')
+      m.join(code, 'b', 's1')
+      m.start(code, 0)
+
+      expect(() => clock.advance(TURN_TIMEOUT_MS)).not.toThrow()
+      expect(onError).toHaveBeenCalledWith(code, expect.objectContaining({ message: 'boom' }))
+      expect(m.get(code)?.phase).toBe('playing')
+
+      // The next timeout is a retry, not a frozen table.
+      broken = false
+      clock.advance(TURN_TIMEOUT_MS)
+      expect(m.get(code)?.view(0).lastTurn?.seat).toBe(0)
+    })
+
+    it('does not take the process down when the grace expiry fails', () => {
+      const clock = fakeClock()
+      const onError = vi.fn()
+      const m = new RoomManager({ clock, rng: makeRng(1), onView: () => {}, onError })
+      const code = m.create('a', 's0')
+      m.join(code, 'b', 's1')
+      m.disconnect(code, 1)
+      const room = m.get(code)
+      vi.spyOn(room as NonNullable<typeof room>, 'setPresence').mockImplementation(() => {
+        throw new Error('boom')
+      })
+
+      expect(() => clock.advance(DISCONNECT_GRACE_MS)).not.toThrow()
+      expect(onError).toHaveBeenCalledWith(code, expect.objectContaining({ message: 'boom' }))
+    })
+  })
 })

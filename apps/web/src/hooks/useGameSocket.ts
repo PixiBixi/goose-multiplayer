@@ -93,6 +93,8 @@ export function useGameSocket(): GameSocket {
       if (error.code === 'join_failed') {
         seated.current = null
         rememberTable(null)
+        // Home, not a stale table: its Roll button could only fail.
+        dispatch({ type: 'left' })
       }
       dispatch({ type: 'error', error: messageFor(error) })
     })

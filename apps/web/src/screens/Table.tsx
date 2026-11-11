@@ -1,6 +1,6 @@
 import type { JSX } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import type { SeatView, TableView } from '@goose/protocol'
+import type { ChatLine, SeatView, TableView } from '@goose/protocol'
 import { Board } from '../components/Board.js'
 import { ChatPanel } from '../components/ChatPanel.js'
 import { Die } from '../components/Die.js'
@@ -59,6 +59,7 @@ const LEGEND: Array<{ tone: Tone; icon: 'goose' | 'bridge' | 'well' | 'skull' | 
 
 export type TableProps = {
   view: TableView
+  chat: ChatLine[]
   onRoll: () => void
   onChat: (text: string) => void
   onRestart: () => void
@@ -67,7 +68,7 @@ export type TableProps = {
 
 type LogLine = { id: string; text: string }
 
-export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps): JSX.Element {
+export function Table({ view, chat, onRoll, onChat, onRestart, onLeave }: TableProps): JSX.Element {
   const reduced = usePrefersReducedMotion()
   const names = view.seats.map((seat) => seat.name)
   const signature = turnSignature(view.lastTurn)
@@ -316,7 +317,7 @@ export function Table({ view, onRoll, onChat, onRestart, onLeave }: TableProps):
           </ol>
         </section>
 
-        <ChatPanel lines={view.chat} onSend={onChat} />
+        <ChatPanel lines={chat} onSend={onChat} />
 
         <div className="row">
           <button type="button" onClick={onLeave}>

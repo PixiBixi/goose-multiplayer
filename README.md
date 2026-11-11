@@ -103,12 +103,15 @@ Le serveur n'accepte une connexion navigateur que si son `Origin` correspond au
 si un proxy le réécrit, renseigner `CORS_ORIGIN` avec l'origine publique exacte,
 sans slash final.
 
-| Variable      | Défaut  | Rôle                                                 |
-| ------------- | ------- | ---------------------------------------------------- |
-| `PORT`        | `5050`  | Port d'écoute                                        |
-| `BEHIND_TLS`  | `false` | `true` derrière Traefik                              |
-| `CORS_ORIGIN` | vide    | Origine supplémentaire autorisée (CORS et handshake) |
-| `LOG_LEVEL`   | `info`  | `debug`, `info`, `warn` ou `error`                   |
+| Variable                             | Défaut       | Rôle                                                                    |
+| ------------------------------------ | ------------ | ----------------------------------------------------------------------- |
+| `PORT`                               | `5050`       | Port d'écoute                                                           |
+| `BEHIND_TLS`                         | `false`      | `true` derrière Traefik : `X-Forwarded-For` est lu depuis un pair privé |
+| `CORS_ORIGIN`                        | vide         | Origine supplémentaire autorisée (CORS et handshake)                    |
+| `LOG_LEVEL`                          | `info`       | `debug`, `info`, `warn` ou `error`                                      |
+| `CREATE_BURST` / `CREATE_PER_SECOND` | `3` / `0.1`  | Création de table, par IP cliente                                       |
+| `JOIN_BURST` / `JOIN_PER_SECOND`     | `10` / `0.5` | Rejoindre une table, par IP cliente                                     |
+| `MAX_ROOMS_PER_IP`                   | `10`         | Tables qu'une IP cliente peut tenir en même temps                       |
 
 Les tables vivent en mémoire : ne jamais dépasser une réplique. Deux répliques
 en tiendraient chacune la moitié sans que l'une connaisse l'autre.

@@ -1,6 +1,7 @@
 import { makeRng } from '@goose/engine'
 import type { TableView } from '@goose/protocol'
 import { describe, expect, it, vi } from 'vitest'
+import { loadConfig } from '../config.js'
 import { RoomManager, systemClock } from '../rooms/room-manager.js'
 import { publishRoom, registerHandlers } from './handlers.js'
 
@@ -22,13 +23,14 @@ function server() {
     rng: makeRng(7),
     onView: (code) => publishRoom(io as never, manager, code),
   })
-  registerHandlers(io as never, manager)
+  registerHandlers(io as never, manager, loadConfig({}))
 
   const client = (id: string): FakeSocket => {
     const socket: FakeSocket = {
       id,
       rooms: new Set<string>(),
       data: {},
+      handshake: { address: '127.0.0.1', headers: {} },
       on: vi.fn(),
       emit: vi.fn(),
       join: (code: string) => socket.rooms.add(code),
@@ -49,6 +51,7 @@ type FakeSocket = {
   id: string
   rooms: Set<string>
   data: Record<string, unknown>
+  handshake: { address: string; headers: Record<string, string> }
   on: ReturnType<typeof vi.fn>
   emit: ReturnType<typeof vi.fn>
   join: (code: string) => void
@@ -116,7 +119,8 @@ describe('a socket walking to another table', () => {
 
     fire(host, 'chat', { text: 'still here' })
     await settle()
-    expect(lastView(host).chat.map((line) => line.text)).toEqual(['still here'])
+    const lines = host.emit.mock.calls.filter((call) => call[0] === 'chatLine')
+    expect(lines.map((call) => (call[1] as { text: string }).text)).toEqual(['still here'])
   })
 })
 
@@ -138,5 +142,44 @@ describe('a second tab on the same seat', () => {
     // The first tab going away must not mark the seat the second tab now holds.
     expect(manager.get(code)?.view(0).seats[1]?.presence).toBe('active')
     expect(lastView(second).you.seat).toBe(1)
+  })
+})
+
+describe('one socket, one seat', () => {
+  const errors = (socket: FakeSocket): string[] =>
+    socket.emit.mock.calls
+      .filter((call) => call[0] === 'error')
+      .map((call) => (call[1] as { code: string }).code)
+
+  it('refuses a second session at the table the socket already sits at', async () => {
+    const { manager, client } = server()
+    const host = client('a')
+    fire(host, 'createRoom', { name: 'Ana', session: 's-ana' })
+    await settle()
+    const code = lastView(host).code
+    const guest = client('b')
+    fire(guest, 'joinRoom', { code, name: 'Ben', session: 's-ben' })
+    await settle()
+
+    fire(guest, 'joinRoom', { code, name: 'Ben again', session: 's-other' })
+    await settle()
+
+    expect(errors(guest)).toEqual(['join_failed'])
+    expect(manager.get(code)?.seatCount).toBe(2)
+    expect(guest.data).toEqual({ code, seat: 1 })
+  })
+
+  it('still lets a socket present the session of the seat it already holds', async () => {
+    const { manager, client } = server()
+    const host = client('a')
+    fire(host, 'createRoom', { name: 'Ana', session: 's-ana' })
+    await settle()
+    const code = lastView(host).code
+
+    fire(host, 'joinRoom', { code, name: 'Ana', session: 's-ana' })
+    await settle()
+
+    expect(errors(host)).toEqual([])
+    expect(manager.get(code)?.seatCount).toBe(1)
   })
 })

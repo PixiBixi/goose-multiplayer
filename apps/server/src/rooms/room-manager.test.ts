@@ -1,6 +1,11 @@
 import { makeRng } from '@goose/engine'
 import { describe, expect, it, vi } from 'vitest'
-import { DISCONNECT_GRACE_MS, RoomManager, TURN_TIMEOUT_MS } from './room-manager.js'
+import {
+  DISCONNECT_GRACE_MS,
+  RoomManager,
+  TooManyRoomsError,
+  TURN_TIMEOUT_MS,
+} from './room-manager.js'
 
 /* A clock the test drives by hand. Nothing here ever waits: a suite that
    sleeps for a timeout is a suite nobody runs on every commit. */
@@ -52,15 +57,26 @@ describe('RoomManager', () => {
     expect(m.get(code)?.view(0).turn.seat).toBe(1)
   })
 
-  it('cancels the turn timer when the seat rolls in time', () => {
-    const { m, clock } = manager()
+  it('gives the next seat its own clock after a manual roll', () => {
+    // Dice 1 and 2 over and over: never a double, so the turn always moves on.
+    const values = [0, 0.2]
+    let next = 0
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: () => values[next++ % 2] ?? 0, onView: () => {} })
     const code = m.create('a', 's0')
     m.join(code, 'b', 's1')
     m.start(code, 0)
+    clock.advance(TURN_TIMEOUT_MS - 1)
     m.roll(code, 0)
-    const after = m.get(code)?.view(0).lastTurn
-    clock.advance(TURN_TIMEOUT_MS * 3)
-    expect(m.get(code)?.view(0).lastTurn?.dice).toEqual(after?.dice)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+
+    // The clock that was running for seat 0 is gone: it does not roll for seat 1.
+    clock.advance(TURN_TIMEOUT_MS - 1)
+    expect(m.get(code)?.view(0).turn.seat).toBe(1)
+    // Seat 1 never acted, so a full timeout after seat 0's roll the manager rolls for it.
+    clock.advance(1)
+    expect(m.get(code)?.view(0).lastTurn?.seat).toBe(1)
+    expect(m.get(code)?.view(0).turn.seat).toBe(0)
   })
 
   it('arms the turn clock again after a rematch', () => {
@@ -114,6 +130,30 @@ describe('RoomManager', () => {
     const m = new RoomManager({ clock: fakeClock(), rng: makeRng(1), onView: vi.fn(), maxRooms: 1 })
     m.create('a', 's0')
     expect(() => m.create('b', 's1')).toThrow(/full/i)
+  })
+
+  it('caps the rooms one client holds, so one address cannot fill the server', () => {
+    const m = new RoomManager({
+      clock: fakeClock(),
+      rng: makeRng(1),
+      onView: vi.fn(),
+      maxRoomsPerOwner: 2,
+    })
+    m.create('a', 's0', '203.0.113.7')
+    m.create('b', 's1', '203.0.113.7')
+    expect(() => m.create('c', 's2', '203.0.113.7')).toThrow(TooManyRoomsError)
+    expect(() => m.create('d', 's3', '198.51.100.1')).not.toThrow()
+  })
+
+  it('gives a client its allowance back when its room is dropped', () => {
+    const clock = fakeClock()
+    const m = new RoomManager({ clock, rng: makeRng(1), onView: vi.fn(), maxRoomsPerOwner: 1 })
+    const code = m.create('a', 's0', '203.0.113.7')
+    expect(() => m.create('b', 's1', '203.0.113.7')).toThrow(TooManyRoomsError)
+    m.disconnect(code, 0)
+    clock.advance(DISCONNECT_GRACE_MS)
+    expect(m.get(code)).toBeUndefined()
+    expect(() => m.create('b', 's1', '203.0.113.7')).not.toThrow()
   })
 
   it('publishes a view after every state change', () => {
@@ -189,5 +229,46 @@ describe('RoomManager', () => {
         .seats.map((s) => s.position)
     }
     expect(play()).toEqual(play())
+  })
+
+  describe('a timer callback that throws', () => {
+    it('is logged and leaves the room playing, with the turn clock armed again', () => {
+      const clock = fakeClock()
+      const onError = vi.fn()
+      let broken = true
+      const rng = () => {
+        if (broken) throw new Error('boom')
+        return 0.2
+      }
+      const m = new RoomManager({ clock, rng, onView: () => {}, onError })
+      const code = m.create('a', 's0')
+      m.join(code, 'b', 's1')
+      m.start(code, 0)
+
+      expect(() => clock.advance(TURN_TIMEOUT_MS)).not.toThrow()
+      expect(onError).toHaveBeenCalledWith(code, expect.objectContaining({ message: 'boom' }))
+      expect(m.get(code)?.phase).toBe('playing')
+
+      // The next timeout is a retry, not a frozen table.
+      broken = false
+      clock.advance(TURN_TIMEOUT_MS)
+      expect(m.get(code)?.view(0).lastTurn?.seat).toBe(0)
+    })
+
+    it('does not take the process down when the grace expiry fails', () => {
+      const clock = fakeClock()
+      const onError = vi.fn()
+      const m = new RoomManager({ clock, rng: makeRng(1), onView: () => {}, onError })
+      const code = m.create('a', 's0')
+      m.join(code, 'b', 's1')
+      m.disconnect(code, 1)
+      const room = m.get(code)
+      vi.spyOn(room as NonNullable<typeof room>, 'setPresence').mockImplementation(() => {
+        throw new Error('boom')
+      })
+
+      expect(() => clock.advance(DISCONNECT_GRACE_MS)).not.toThrow()
+      expect(onError).toHaveBeenCalledWith(code, expect.objectContaining({ message: 'boom' }))
+    })
   })
 })

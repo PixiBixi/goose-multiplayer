@@ -16,4 +16,23 @@ describe('loadConfig', () => {
   it('rejects a port that is not a number', () => {
     expect(() => loadConfig({ PORT: 'nope' })).toThrow(/PORT/)
   })
+
+  it('defaults the per-IP limits and reads them from the environment', () => {
+    expect(loadConfig({})).toMatchObject({
+      createBurst: 3,
+      createPerSecond: 0.1,
+      maxRoomsPerIp: 10,
+      joinBurst: 10,
+      joinPerSecond: 0.5,
+    })
+    expect(loadConfig({ MAX_ROOMS_PER_IP: '2', JOIN_PER_SECOND: '0.25' })).toMatchObject({
+      maxRoomsPerIp: 2,
+      joinPerSecond: 0.25,
+    })
+  })
+
+  it('rejects a limit that is not a positive number', () => {
+    expect(() => loadConfig({ MAX_ROOMS_PER_IP: '0' })).toThrow(/MAX_ROOMS_PER_IP/)
+    expect(() => loadConfig({ CREATE_BURST: '1.5' })).toThrow(/CREATE_BURST/)
+  })
 })

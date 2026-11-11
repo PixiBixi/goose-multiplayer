@@ -1,10 +1,8 @@
-import { clientSchemas } from '@goose/protocol'
 import type { ChatLine } from '@goose/protocol'
 import type { FormEvent, JSX } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { t } from '../i18n/index.js'
-
-const textSchema = clientSchemas.chat.shape.text
+import { CHAT_MAX, validChat } from '../lib/limits.js'
 
 export function ChatPanel({
   lines,
@@ -26,7 +24,7 @@ export function ChatPanel({
 
   const submit = (event: FormEvent): void => {
     event.preventDefault()
-    if (!textSchema.safeParse(draft).success) return
+    if (!validChat(draft)) return
     onSend(draft.trim())
     setDraft('')
   }
@@ -49,7 +47,7 @@ export function ChatPanel({
         <input
           id="chat-text"
           type="text"
-          maxLength={500}
+          maxLength={CHAT_MAX}
           placeholder={t('table.chatPlaceholder')}
           value={draft}
           onChange={(event) => {

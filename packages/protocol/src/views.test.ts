@@ -15,11 +15,10 @@ describe('TableView', () => {
       'lastTurn',
       'winner',
       'ranking',
-      'chat',
     ]
     // A compile-time check: adding a field to TableView without adding it here
     // fails the type, which is the reminder to think about what it exposes.
-    expect(keys).toHaveLength(11)
+    expect(keys).toHaveLength(10)
   })
 
   it('carries every step kind the engine names', () => {

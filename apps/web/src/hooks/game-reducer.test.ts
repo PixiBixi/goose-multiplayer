@@ -5,7 +5,12 @@ const view = { code: 'HKD4P2', phase: 'lobby' } as never
 
 describe('game-reducer', () => {
   it('starts with no view and a connecting socket', () => {
-    expect(initialState).toEqual<ClientState>({ view: null, status: 'connecting', error: null })
+    expect(initialState).toEqual<ClientState>({
+      view: null,
+      status: 'connecting',
+      error: null,
+      chat: [],
+    })
   })
 
   it('stores the view the server sent, without deriving anything from it', () => {
@@ -38,5 +43,34 @@ describe('game-reducer', () => {
     const cleared = reduce(errored, { type: 'dismiss' })
     expect(cleared.error).toBeNull()
     expect(cleared.view).toBe(view)
+  })
+
+  it('replaces the chat with the history sent on sitting down, then appends lines', () => {
+    const line = (text: string) => ({ seat: 0, name: 'Ana', text, at: 1 })
+    const seated = reduce(initialState, { type: 'chatHistory', lines: [line('a'), line('b')] })
+    const spoken = reduce(seated, { type: 'chatLine', line: line('c') })
+    expect(spoken.chat.map((l) => l.text)).toEqual(['a', 'b', 'c'])
+    // A reconnect sends the history again: it replaces, it does not duplicate.
+    expect(reduce(spoken, { type: 'chatHistory', lines: [line('c')] }).chat).toHaveLength(1)
+  })
+
+  it('bounds the chat the way the server does', () => {
+    let state = initialState
+    for (let i = 0; i < 250; i++) {
+      state = reduce(state, {
+        type: 'chatLine',
+        line: { seat: 0, name: 'Ana', text: `${i}`, at: i },
+      })
+    }
+    expect(state.chat).toHaveLength(200)
+    expect(state.chat.at(-1)?.text).toBe('249')
+  })
+
+  it('drops the chat with the table when the seat is given up', () => {
+    const open = reduce(initialState, {
+      type: 'chatHistory',
+      lines: [{ seat: 0, name: 'Ana', text: 'a', at: 1 }],
+    })
+    expect(reduce(open, { type: 'left' }).chat).toEqual([])
   })
 })

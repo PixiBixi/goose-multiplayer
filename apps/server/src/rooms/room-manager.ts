@@ -1,4 +1,4 @@
-import { MAX_CONSECUTIVE_DOUBLES, makeRng, rollDice } from '@goose/engine'
+import { MAX_CONSECUTIVE_DOUBLES, rollDice } from '@goose/engine'
 import type { Rng, Seat } from '@goose/engine'
 import { Room } from './room.js'
 import { makeRoomCode } from './room-code.js'
@@ -13,8 +13,19 @@ export type ManagerDeps = {
   clock: Clock
   rng: Rng
   onView: (code: string) => void
-  /** Rooms held at once. Nothing else bounds them: a script opening new sockets escapes the rate limit. */
+  /** Rooms held at once, whoever created them. */
   maxRooms?: number
+  /** Rooms one owner (a client IP) may hold at once. Unlimited when omitted. */
+  maxRoomsPerOwner?: number
+  /** Told about an exception a timer callback swallowed, so it can be logged. */
+  onError?: (code: string, error: Error) => void
+}
+
+/** The owner already holds its share of rooms; the socket layer answers rate_limited. */
+export class TooManyRoomsError extends Error {
+  constructor() {
+    super('too many tables from this address')
+  }
 }
 
 export const TURN_TIMEOUT_MS = 60_000
@@ -56,20 +67,23 @@ export function systemClock(): Clock {
 export class RoomManager {
   #deps: ManagerDeps
   #rooms = new Map<string, Entry>()
-  /* Room codes are cosmetic, not gameplay: they draw from their own rng so a
-     table's dice sequence, and a same-seed replay of it, never depends on how
-     many rooms this manager happened to create first. */
-  #codeRng: Rng = makeRng(Date.now())
+  /** Who created each room, and how many each owner holds, until the room is dropped. */
+  #ownerOf = new Map<string, string>()
+  #ownedCount = new Map<string, number>()
 
   constructor(deps: ManagerDeps) {
     this.#deps = deps
   }
 
-  create(name: string, sessionId: string): string {
+  create(name: string, sessionId: string, owner: string | null = null): string {
     if (this.#rooms.size >= (this.#deps.maxRooms ?? MAX_ROOMS))
       throw new Error('the server is full')
-    let code = makeRoomCode(this.#codeRng)
-    while (this.#rooms.has(code)) code = makeRoomCode(this.#codeRng)
+    const owned = owner === null ? 0 : (this.#ownedCount.get(owner) ?? 0)
+    if (owned >= (this.#deps.maxRoomsPerOwner ?? Number.POSITIVE_INFINITY)) {
+      throw new TooManyRoomsError()
+    }
+    let code = makeRoomCode()
+    while (this.#rooms.has(code)) code = makeRoomCode()
     const room = new Room(code)
     const seat = room.join(name, sessionId)
     const entry: Entry = {
@@ -79,6 +93,10 @@ export class RoomManager {
       sessions: new Map([[sessionId, seat]]),
     }
     this.#rooms.set(code, entry)
+    if (owner !== null) {
+      this.#ownerOf.set(code, owner)
+      this.#ownedCount.set(owner, owned + 1)
+    }
     this.#deps.onView(code)
     return code
   }
@@ -112,15 +130,15 @@ export class RoomManager {
     this.#deps.onView(code)
   }
 
-  /* A roll that actually happens in time needs no further enforcement: it
-     proves someone is at the table. It only rearms a timer if the seat it
-     hands off to turns out to be 'left', in which case nobody will ever roll
-     for it and the manager has to keep going on its own. */
+  /* A manual roll proves someone is at the table, but only for this turn:
+     the seat it hands off to gets a fresh clock, or an idle player would
+     freeze the table. Seats marked 'left' are skipped first. */
   roll(code: string, seat: Seat): void {
     const entry = this.#require(code)
     this.#clearTurnTimer(entry)
     this.#resolveRoll(entry, seat)
-    if (this.#skipLeftSeats(entry)) this.#armTurnTimer(code, entry)
+    this.#skipLeftSeats(entry)
+    this.#armTurnTimer(code, entry)
     this.#deps.onView(code)
   }
 
@@ -128,7 +146,10 @@ export class RoomManager {
     const entry = this.#require(code)
     this.#clearGrace(entry, seat)
     entry.room.setPresence(seat, 'disconnected')
-    const timer = this.#deps.clock.setTimeout(() => this.#expire(code, seat), DISCONNECT_GRACE_MS)
+    const timer = this.#deps.clock.setTimeout(
+      () => this.#guarded(code, () => this.#expire(code, seat)),
+      DISCONNECT_GRACE_MS,
+    )
     entry.graceTimers.set(seat, timer)
     this.#deps.onView(code)
   }
@@ -148,6 +169,11 @@ export class RoomManager {
     const entry = this.#require(code)
     this.#clearGrace(entry, seat)
     this.#markLeft(code, entry, seat)
+  }
+
+  /** The seat a session holds at this table, if any. */
+  seatOf(code: string, sessionId: string): Seat | undefined {
+    return this.#rooms.get(code)?.sessions.get(sessionId)
   }
 
   get(code: string): Room | undefined {
@@ -198,6 +224,17 @@ export class RoomManager {
     for (const grace of entry.graceTimers.values()) this.#deps.clock.clearTimeout(grace)
     entry.graceTimers.clear()
     this.#rooms.delete(code)
+    this.#releaseOwner(code)
+  }
+
+  /** Gives a dropped room back to its owner's allowance; the count is dropped at zero. */
+  #releaseOwner(code: string): void {
+    const owner = this.#ownerOf.get(code)
+    if (owner === undefined) return
+    this.#ownerOf.delete(code)
+    const left = (this.#ownedCount.get(owner) ?? 1) - 1
+    if (left > 0) this.#ownedCount.set(owner, left)
+    else this.#ownedCount.delete(owner)
   }
 
   #clearGrace(entry: Entry, seat: Seat): void {
@@ -212,6 +249,7 @@ export class RoomManager {
   #autoRoll(code: string): void {
     const entry = this.#rooms.get(code)
     if (!entry || entry.room.phase !== 'playing') return
+    entry.turnTimer = null // fired: the handle is spent
     const seat = entry.room.view(entry.room.hostSeat).turn.seat
     this.#resolveRoll(entry, seat)
     this.#skipLeftSeats(entry)
@@ -222,16 +260,13 @@ export class RoomManager {
   /* Rolls on behalf of every consecutive seat marked 'left': nobody will
      ever act for them, so waiting out a timer for each one only delays the
      table. Bounded at one full lap so a table abandoned by everyone still
-     arms a timer instead of spinning forever. Returns whether it resolved
-     at least one seat, so a caller that must not arm a timer on an ordinary
-     turn (a prompt manual roll) only does so when this actually fired.
+     arms a timer instead of spinning forever.
 
      A lap is longer than the seat count: the doubles house rule can hand the
      same seat up to MAX_CONSECUTIVE_DOUBLES rolls before the turn moves on,
      and a bound of one roll per seat would leave a 'left' seat still holding
      the turn when the loop gave up. */
-  #skipLeftSeats(entry: Entry): boolean {
-    let skipped = false
+  #skipLeftSeats(entry: Entry): void {
     const cap = entry.room.seatCount * MAX_CONSECUTIVE_DOUBLES
     for (let hops = 0; hops <= cap; hops++) {
       if (entry.room.phase !== 'playing') break
@@ -239,14 +274,28 @@ export class RoomManager {
       const seat = view.turn.seat
       if (view.seats[seat]?.presence !== 'left') break
       this.#resolveRoll(entry, seat)
-      skipped = true
     }
-    return skipped
   }
 
   #armTurnTimer(code: string, entry: Entry): void {
     if (entry.room.phase !== 'playing') return
-    entry.turnTimer = this.#deps.clock.setTimeout(() => this.#autoRoll(code), TURN_TIMEOUT_MS)
+    entry.turnTimer = this.#deps.clock.setTimeout(
+      () => this.#guarded(code, () => this.#autoRoll(code)),
+      TURN_TIMEOUT_MS,
+    )
+  }
+
+  /* A timer callback has no caller to catch for it: a throw here would end the
+     process and every room with it. Log it and keep the room playing. */
+  #guarded(code: string, fn: () => void): void {
+    try {
+      fn()
+    } catch (err) {
+      this.#deps.onError?.(code, err instanceof Error ? err : new Error(String(err)))
+      const entry = this.#rooms.get(code)
+      // The failed callback may be the one that would have re-armed the clock.
+      if (entry && entry.turnTimer === null) this.#armTurnTimer(code, entry)
+    }
   }
 
   #clearTurnTimer(entry: Entry): void {

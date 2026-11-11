@@ -2,13 +2,23 @@ import { makeRng } from '@goose/engine'
 import { clientSchemas } from '@goose/protocol'
 import type { TableView } from '@goose/protocol'
 import { describe, expect, it, vi } from 'vitest'
+import { loadConfig } from '../config.js'
 import { RoomManager, systemClock } from '../rooms/room-manager.js'
 import { registerHandlers } from './handlers.js'
 
 function fakeSocket(id = 'sock1') {
   const on = vi.fn()
   const emit = vi.fn()
-  return { id, on, emit, join: vi.fn(), leave: vi.fn(), data: {} as Record<string, unknown> }
+  const handshake = { address: '127.0.0.1', headers: {} }
+  return {
+    id,
+    on,
+    emit,
+    join: vi.fn(),
+    leave: vi.fn(),
+    data: {} as Record<string, unknown>,
+    handshake,
+  }
 }
 
 type FakeSocket = ReturnType<typeof fakeSocket>
@@ -23,11 +33,21 @@ function table() {
     onView: () => undefined,
   })
   let connect: (socket: unknown) => void = () => undefined
-  registerHandlers(
-    { on: (_: string, fn: (s: unknown) => void) => (connect = fn) } as never,
+  const sockets: FakeSocket[] = []
+  const io = {
+    on: (_: string, fn: (s: unknown) => void) => (connect = fn),
+    in: (code: string) => ({
+      fetchSockets: () => Promise.resolve(sockets.filter((socket) => socket.data.code === code)),
+    }),
+  }
+  registerHandlers(io as never, manager, loadConfig({}))
+  return {
     manager,
-  )
-  return { manager, connect: (socket: FakeSocket) => connect(socket) }
+    connect: (socket: FakeSocket) => {
+      sockets.push(socket)
+      connect(socket)
+    },
+  }
 }
 
 function fire(socket: FakeSocket, action: string, payload: unknown): void {
@@ -35,6 +55,10 @@ function fire(socket: FakeSocket, action: string, payload: unknown): void {
     p: unknown,
   ) => void
   handler(payload)
+}
+
+function chatLines(socket: FakeSocket, event: 'chatLine' | 'chatHistory'): unknown[] {
+  return socket.emit.mock.calls.filter((call) => call[0] === event).map((call) => call[1])
 }
 
 function lastView(socket: FakeSocket): TableView {
@@ -46,7 +70,7 @@ describe('handlers', () => {
   it('registers one listener per declared client action', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const registered = socket.on.mock.calls.map((c) => c[0] as string)
     for (const action of Object.keys(clientSchemas)) {
       // The handler is the piece that gets forgotten. Testing both ends of a
@@ -58,7 +82,7 @@ describe('handlers', () => {
   it('rejects a payload that fails its schema without throwing', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const chat = socket.on.mock.calls.find((c) => c[0] === 'chat')?.[1] as (p: unknown) => void
     expect(() => chat({ text: '' })).not.toThrow()
     expect(socket.emit).toHaveBeenCalledWith(
@@ -89,7 +113,7 @@ describe('handlers', () => {
   it('refuses playCard while the table runs in classic mode', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     const play = socket.on.mock.calls.find((c) => c[0] === 'playCard')?.[1] as (p: unknown) => void
     play({ cardId: 'x' })
     expect(socket.emit).toHaveBeenCalledWith(
@@ -152,7 +176,7 @@ describe('handlers', () => {
   it('refuses a seat request with no session token at all', () => {
     const socket = fakeSocket()
     const io = { on: (_: string, fn: (s: unknown) => void) => fn(socket) }
-    registerHandlers(io as never, {} as never)
+    registerHandlers(io as never, {} as never, loadConfig({}))
     fire(socket, 'joinRoom', { code: 'ABC123', name: 'Claire' })
     expect(socket.emit).toHaveBeenCalledWith(
       'error',
@@ -180,7 +204,39 @@ describe('handlers', () => {
     // chat, configureTable and leaveRoom never reach the manager, so
     // they never trigger its onView: answering only the socket that acted left
     // everyone else on a table where nobody ever said anything.
-    expect(lastView(host).chat.map((line) => line.text)).toEqual(['bien joué'])
-    expect(lastView(guest).chat.map((line) => line.text)).toEqual(['bien joué'])
+    for (const socket of [host, guest]) {
+      expect(chatLines(socket, 'chatLine')).toEqual([
+        expect.objectContaining({ name: 'Claire', text: 'bien joué' }),
+      ])
+      // The line travels on its own event: no table view carries the log.
+      expect(lastView(socket)).not.toHaveProperty('chat')
+    }
+  })
+
+  it('sends the log once to a seat that sits down, then only new lines', async () => {
+    const { connect } = table()
+    const host = fakeSocket('a')
+    connect(host)
+    fire(host, 'createRoom', { name: 'Jérémy', session: 'token-host' })
+    const code = lastView(host).code
+    expect(chatLines(host, 'chatHistory')).toEqual([[]])
+
+    fire(host, 'chat', { text: 'premier' })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const guest = fakeSocket('b')
+    connect(guest)
+    fire(guest, 'joinRoom', { code, name: 'Claire', session: 'token-guest' })
+    expect(chatLines(guest, 'chatHistory')).toEqual([
+      [expect.objectContaining({ name: 'Jérémy', text: 'premier' })],
+    ])
+    expect(chatLines(guest, 'chatLine')).toEqual([])
+
+    // A roll republishes the view, and the log does not ride along.
+    fire(host, 'startGame', {})
+    fire(host, 'roll', {})
+    expect(lastView(host)).not.toHaveProperty('chat')
+    expect(chatLines(host, 'chatHistory')).toHaveLength(1)
   })
 })

@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Step } from '@goose/engine'
-import type { TableView } from '@goose/protocol'
+import type { ChatLine, TableView } from '@goose/protocol'
 import { makeSeat, makeView } from '../test-fixtures.js'
 import { resizeTo, setReducedMotion } from '../test-setup.js'
 import { Table } from './Table.js'
@@ -10,7 +10,11 @@ import { Table } from './Table.js'
 /* Reduced motion by default: most of these tests are about what the table
    says, not how it moves, and the ones that are about the motion turn it back
    on and drive the clock by hand. */
-function setup(view: TableView = makeView({ phase: 'playing' }), reduced = true) {
+function setup(
+  view: TableView = makeView({ phase: 'playing' }),
+  reduced = true,
+  chat: ChatLine[] = [],
+) {
   setReducedMotion(reduced)
   resizeTo(1000)
   const onRoll = vi.fn()
@@ -18,7 +22,14 @@ function setup(view: TableView = makeView({ phase: 'playing' }), reduced = true)
   const onRestart = vi.fn()
   const onLeave = vi.fn()
   const { container } = render(
-    <Table view={view} onRoll={onRoll} onChat={onChat} onRestart={onRestart} onLeave={onLeave} />,
+    <Table
+      view={view}
+      chat={chat}
+      onRoll={onRoll}
+      onChat={onChat}
+      onRestart={onRestart}
+      onLeave={onLeave}
+    />,
   )
   return { container, onRoll, onChat, onRestart, onLeave, user: userEvent.setup() }
 }
@@ -160,6 +171,13 @@ describe('Table', () => {
     await user.click(screen.getByRole('button', { name: 'Envoyer' }))
     expect(onChat).toHaveBeenCalledWith('bien joué')
     expect(field).toHaveValue('')
+  })
+
+  it('shows the chat it is given', () => {
+    setup(makeView({ phase: 'playing' }), true, [
+      { seat: 1, name: 'Claire', text: 'bien joué', at: 1 },
+    ])
+    expect(screen.getByText('bien joué')).toBeInTheDocument()
   })
 
   it('refuses to send an empty chat line', async () => {

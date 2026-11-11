@@ -1,6 +1,6 @@
 import { canAttemptEscape, legalMoves, ranking as computeRanking } from '@goose/engine'
 import type { GameState, Seat, Step, TableConfig } from '@goose/engine'
-import type { ChatLine, Presence, SeatView, TableView } from '@goose/protocol'
+import type { Presence, SeatView, TableView } from '@goose/protocol'
 import { APP_VERSION } from './version.js'
 
 export type Member = {
@@ -19,7 +19,6 @@ export type ViewInput = {
   members: Member[]
   game: GameState | null
   lastTurn: LastTurn
-  chat: ChatLine[]
 }
 
 /* Six seats, six colours, picked to stay distinguishable at a glance on the
@@ -37,7 +36,7 @@ function blockedTurnsLeftOf(game: GameState | null, seat: Seat): number | null {
 }
 
 export function buildView(input: ViewInput, forSeat: Seat): TableView {
-  const { code, phase, config, hostSeat, members, game, lastTurn, chat } = input
+  const { code, phase, config, hostSeat, members, game, lastTurn } = input
   const you = members[forSeat]
   if (!you) throw new Error(`no seat ${forSeat} in this room`)
 
@@ -76,6 +75,5 @@ export function buildView(input: ViewInput, forSeat: Seat): TableView {
     lastTurn,
     winner: game?.winner ?? null,
     ranking: game ? computeRanking(game) : [],
-    chat,
   }
 }

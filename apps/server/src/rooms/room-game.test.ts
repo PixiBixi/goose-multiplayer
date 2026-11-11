@@ -102,7 +102,13 @@ describe('Room, playing', () => {
   it('keeps the chat log bounded', () => {
     const r = started()
     for (let i = 0; i < 300; i++) r.chat(0, `line ${i}`)
-    expect(r.view(0).chat.length).toBeLessThanOrEqual(200)
-    expect(r.view(0).chat.at(-1)?.text).toBe('line 299')
+    expect(r.chatLog.length).toBeLessThanOrEqual(200)
+    expect(r.chatLog.at(-1)?.text).toBe('line 299')
+  })
+
+  it('keeps the chat out of the table view, which goes out on every roll', () => {
+    const r = started()
+    r.chat(0, 'salut')
+    expect(r.view(0)).not.toHaveProperty('chat')
   })
 })

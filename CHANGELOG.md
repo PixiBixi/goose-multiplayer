@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.8](https://github.com/PixiBixi/goose-multiplayer/compare/3dd6d278e338588b04bb8fb4bf1afc79a55c1703..v0.7.8) - 2026-11-11
+#### Miscellaneous Chores
+- (**deps**) update docker/login-action action to v4.8.0 (#71) - ([3dd6d27](https://github.com/PixiBixi/goose-multiplayer/commit/3dd6d278e338588b04bb8fb4bf1afc79a55c1703)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.7](https://github.com/PixiBixi/goose-multiplayer/compare/e78dc6c6bde49cf3ce91e6179db1162b2cbd308d..v0.7.7) - 2026-11-09
 #### Miscellaneous Chores
 - (**deps**) lock file maintenance (#70) - ([e78dc6c](https://github.com/PixiBixi/goose-multiplayer/commit/e78dc6c6bde49cf3ce91e6179db1162b2cbd308d)) - renovate[bot], renovate[bot]

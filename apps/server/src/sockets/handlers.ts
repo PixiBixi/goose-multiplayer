@@ -194,7 +194,12 @@ export function registerHandlers(io: Server, manager: RoomManager, config: Serve
       run('join', () => {
         const { code, name, session } = parsed.data
         // Walking to another table gives the old seat up; rejoining this one does not.
-        if ((socket.data as Partial<SessionData>).code !== code) release(socket)
+        const held = socket.data as Partial<SessionData>
+        if (held.code !== code) release(socket)
+        // One socket, one seat: only the seat it already holds may be claimed again.
+        else if (manager.seatOf(code, session) !== held.seat) {
+          throw new Error('this connection already holds a seat at this table')
+        }
         sit(socket, code, takeSeat(manager, code, name, session))
         publish(socket, manager, code)
       })

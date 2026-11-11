@@ -143,3 +143,42 @@ describe('a second tab on the same seat', () => {
     expect(lastView(second).you.seat).toBe(1)
   })
 })
+
+describe('one socket, one seat', () => {
+  const errors = (socket: FakeSocket): string[] =>
+    socket.emit.mock.calls
+      .filter((call) => call[0] === 'error')
+      .map((call) => (call[1] as { code: string }).code)
+
+  it('refuses a second session at the table the socket already sits at', async () => {
+    const { manager, client } = server()
+    const host = client('a')
+    fire(host, 'createRoom', { name: 'Ana', session: 's-ana' })
+    await settle()
+    const code = lastView(host).code
+    const guest = client('b')
+    fire(guest, 'joinRoom', { code, name: 'Ben', session: 's-ben' })
+    await settle()
+
+    fire(guest, 'joinRoom', { code, name: 'Ben again', session: 's-other' })
+    await settle()
+
+    expect(errors(guest)).toEqual(['join_failed'])
+    expect(manager.get(code)?.seatCount).toBe(2)
+    expect(guest.data).toEqual({ code, seat: 1 })
+  })
+
+  it('still lets a socket present the session of the seat it already holds', async () => {
+    const { manager, client } = server()
+    const host = client('a')
+    fire(host, 'createRoom', { name: 'Ana', session: 's-ana' })
+    await settle()
+    const code = lastView(host).code
+
+    fire(host, 'joinRoom', { code, name: 'Ana', session: 's-ana' })
+    await settle()
+
+    expect(errors(host)).toEqual([])
+    expect(manager.get(code)?.seatCount).toBe(1)
+  })
+})

@@ -166,6 +166,11 @@ export class RoomManager {
     this.#markLeft(code, entry, seat)
   }
 
+  /** The seat a session holds at this table, if any. */
+  seatOf(code: string, sessionId: string): Seat | undefined {
+    return this.#rooms.get(code)?.sessions.get(sessionId)
+  }
+
   get(code: string): Room | undefined {
     return this.#rooms.get(code)?.room
   }

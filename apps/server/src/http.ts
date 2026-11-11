@@ -1,13 +1,14 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import express, { type Express } from 'express'
+import { sendPrecompressed, servePrecompressed } from './precompressed.js'
 
 /* apps/web is another task's territory: this only reads its build output, and
    only when present, so the server boots fine in dev and in this package's
    own tests before that build exists. */
 const WEB_DIST = join(import.meta.dirname, '../../web/dist')
 
-export function createApp(): Express {
+export function createApp(webDist: string = WEB_DIST): Express {
   const app = express()
   app.disable('x-powered-by')
   app.use(express.json())
@@ -16,7 +17,7 @@ export function createApp(): Express {
     res.json({ status: 'ok' })
   })
 
-  if (existsSync(WEB_DIST)) {
+  if (existsSync(webDist)) {
     /* Two rules, and getting them the wrong way round is how a deploy stays
        invisible for a week.
 
@@ -27,8 +28,11 @@ export function createApp(): Express {
        index.html is the file that POINTS at those hashes, so it keeps
        max-age=0 and revalidates on every load. It is served both by the static
        mount below and by the SPA fallback, and neither adds a max-age. */
-    app.use('/assets', express.static(join(WEB_DIST, 'assets'), { maxAge: '1y', immutable: true }))
-    app.use(express.static(WEB_DIST))
+    /* The build writes a .br and a .gz beside every text file: those are sent
+       to a client that accepts them, and the plain file only to one that does not. */
+    app.use(servePrecompressed(webDist))
+    app.use('/assets', express.static(join(webDist, 'assets'), { maxAge: '1y', immutable: true }))
+    app.use(express.static(webDist))
     /* Express 5 runs path-to-regexp 8, which rejects a bare '*': a wildcard
        has to be named. This line only executes once apps/web/dist exists, so
        the throw hid until the client was built. Do NOT shorten it back. */
@@ -37,7 +41,9 @@ export function createApp(): Express {
         next()
         return
       }
-      res.sendFile(join(WEB_DIST, 'index.html'))
+      if (!sendPrecompressed(webDist, 'index.html', req, res)) {
+        res.sendFile(join(webDist, 'index.html'))
+      }
     })
   }
 

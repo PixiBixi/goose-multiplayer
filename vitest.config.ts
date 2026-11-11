@@ -19,6 +19,7 @@ export default defineConfig({
           include: [
             'packages/*/src/**/*.test.ts',
             'apps/server/src/**/*.test.ts',
+            'scripts/**/*.test.ts',
             /* tokens.test.ts reads the stylesheet off disk. Under jsdom the
                transform runs in web mode and import.meta.url is an http URL,
                which readFileSync refuses, so it belongs on this side. */

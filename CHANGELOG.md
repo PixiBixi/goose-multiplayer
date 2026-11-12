@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.11](https://github.com/PixiBixi/goose-multiplayer/compare/de9624c02a2afe88cd28605567d510034521b77a..v0.7.11) - 2026-11-12
+#### Miscellaneous Chores
+- (**deps**) update step-security/harden-runner action to v2.22.4 (#75) - ([de9624c](https://github.com/PixiBixi/goose-multiplayer/commit/de9624c02a2afe88cd28605567d510034521b77a)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.10](https://github.com/PixiBixi/goose-multiplayer/compare/95c0e3e084773fa7d244150f162e5bbabc5c198d..v0.7.10) - 2026-11-11
 #### Bug Fixes
 - hardening from the security and reliability review (#73) - ([95c0e3e](https://github.com/PixiBixi/goose-multiplayer/commit/95c0e3e084773fa7d244150f162e5bbabc5c198d)) - Jérémy

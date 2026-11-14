@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.13](https://github.com/PixiBixi/goose-multiplayer/compare/41d514ed6a8f7ae1380fa369b82e1a90d8a86bc7..v0.7.13) - 2026-11-14
+#### Miscellaneous Chores
+- (**deps**) update dependency typescript-eslint to v8.72.2 (#77) - ([41d514e](https://github.com/PixiBixi/goose-multiplayer/commit/41d514ed6a8f7ae1380fa369b82e1a90d8a86bc7)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.12](https://github.com/PixiBixi/goose-multiplayer/compare/879fae660c952a5d1cf304c6c1713339209ac71e..v0.7.12) - 2026-11-14
 #### Miscellaneous Chores
 - (**deps**) update dependency @vitejs/plugin-react to v6.3.0 (#76) - ([879fae6](https://github.com/PixiBixi/goose-multiplayer/commit/879fae660c952a5d1cf304c6c1713339209ac71e)) - renovate[bot], renovate[bot]

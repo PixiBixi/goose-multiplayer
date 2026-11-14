@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.12](https://github.com/PixiBixi/goose-multiplayer/compare/879fae660c952a5d1cf304c6c1713339209ac71e..v0.7.12) - 2026-11-14
+#### Miscellaneous Chores
+- (**deps**) update dependency @vitejs/plugin-react to v6.3.0 (#76) - ([879fae6](https://github.com/PixiBixi/goose-multiplayer/commit/879fae660c952a5d1cf304c6c1713339209ac71e)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.11](https://github.com/PixiBixi/goose-multiplayer/compare/de9624c02a2afe88cd28605567d510034521b77a..v0.7.11) - 2026-11-12
 #### Miscellaneous Chores
 - (**deps**) update step-security/harden-runner action to v2.22.4 (#75) - ([de9624c](https://github.com/PixiBixi/goose-multiplayer/commit/de9624c02a2afe88cd28605567d510034521b77a)) - renovate[bot], renovate[bot]

@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.20](https://github.com/PixiBixi/goose-multiplayer/compare/77a54b4b80e317210a274f6b4137966d7803e767..v0.7.20) - 2026-11-25
+#### Miscellaneous Chores
+- (**deps**) update docker/dockerfile:1 docker digest to 572cebb (#83) - ([77a54b4](https://github.com/PixiBixi/goose-multiplayer/commit/77a54b4b80e317210a274f6b4137966d7803e767)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.19](https://github.com/PixiBixi/goose-multiplayer/compare/ac65e8a979f2cd3a29def4f8a03a1ef9efd79614..v0.7.19) - 2026-11-23
 #### Miscellaneous Chores
 - (**deps**) update step-security/harden-runner action to v2.23.0 (#81) - ([ac65e8a](https://github.com/PixiBixi/goose-multiplayer/commit/ac65e8a979f2cd3a29def4f8a03a1ef9efd79614)) - renovate[bot], renovate[bot]

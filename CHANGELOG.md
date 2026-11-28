@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.7.21](https://github.com/PixiBixi/goose-multiplayer/compare/1108469d4f9dd342ebac05a1a5c06102abb286b0..v0.7.21) - 2026-11-28
+#### Miscellaneous Chores
+- (**deps**) update zizmorcore/zizmor-action action to v0.9.1 (#84) - ([1108469](https://github.com/PixiBixi/goose-multiplayer/commit/1108469d4f9dd342ebac05a1a5c06102abb286b0)) - renovate[bot], renovate[bot]
+
+- - -
+
 ## [v0.7.20](https://github.com/PixiBixi/goose-multiplayer/compare/77a54b4b80e317210a274f6b4137966d7803e767..v0.7.20) - 2026-11-25
 #### Miscellaneous Chores
 - (**deps**) update docker/dockerfile:1 docker digest to 572cebb (#83) - ([77a54b4](https://github.com/PixiBixi/goose-multiplayer/commit/77a54b4b80e317210a274f6b4137966d7803e767)) - renovate[bot], renovate[bot]
